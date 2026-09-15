@@ -41,6 +41,35 @@ public class ScheduleController {
         return HttpResponse.ok(response);
     }
 
+    @Get(uri = "/schedule/stream", produces = MediaType.TEXT_EVENT_STREAM)
+    public reactor.core.publisher.Flux<io.micronaut.http.sse.Event<dvxaisched.model.WorkflowProgressEvent>> streamSchedule(
+        @QueryValue(value = "interests", defaultValue = "") String interests
+    ) {
+        if (interests == null || interests.isBlank()) {
+            return reactor.core.publisher.Flux.just(
+                io.micronaut.http.sse.Event.of(dvxaisched.model.WorkflowProgressEvent.rejected("Interests cannot be empty.", 0L))
+            );
+        }
+
+        LOG.info("Received streaming schedule request: '{}'", interests);
+        return reactor.core.publisher.Flux.create(sink -> {
+            Thread.startVirtualThread(() -> {
+                try {
+                    workflowService.processScheduleRequestWithProgress(interests, event -> {
+                        sink.next(io.micronaut.http.sse.Event.of(event));
+                    });
+                    sink.complete();
+                } catch (Exception e) {
+                    LOG.error("Error streaming schedule for interests: {}", interests, e);
+                    sink.next(io.micronaut.http.sse.Event.of(
+                        dvxaisched.model.WorkflowProgressEvent.rejected("Error processing request: " + e.getMessage(), 0L)
+                    ));
+                    sink.complete();
+                }
+            });
+        });
+    }
+
     @Get(uri = "/tracks", produces = MediaType.APPLICATION_JSON)
     public HttpResponse<List<String>> getTracks() {
         return HttpResponse.ok(conferenceService.getAllTracks());

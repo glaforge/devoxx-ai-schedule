@@ -12,8 +12,17 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dev.langchain4j.agentic.observability.AgentListener;
+import dev.langchain4j.agentic.observability.AgentRequest;
+import dev.langchain4j.agentic.observability.AgentResponse;
+import dev.langchain4j.agentic.observability.BeforeAgentToolExecution;
+import dvxaisched.model.WorkflowProgressEvent;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Consumer;
 
 @Singleton
 public class DevoxxAgentWorkflowService {
@@ -38,10 +47,81 @@ public class DevoxxAgentWorkflowService {
 
         LOG.info("Initializing LangChain4j Agentic System with 2-agent sequence...");
 
+        AgentListener agentObservabilityListener = new AgentListener() {
+            @Override
+            public void beforeAgentInvocation(AgentRequest request) {
+                LOG.info("[AgentListener.beforeAgentInvocation] Agent '{}' starting", request.agentName());
+                @SuppressWarnings("unchecked")
+                Consumer<WorkflowProgressEvent> progress = request.agenticScope().executionContextAs(Consumer.class);
+                if (progress != null) {
+                    if (request.agentName().toLowerCase().contains("validator") || request.agentName().equals("validate")) {
+                        progress.accept(WorkflowProgressEvent.of(
+                            "agent1_start",
+                            "Agent 1: Guardrail Validator",
+                            "Evaluating prompt safety, prompt injection defenses, and technical relevance..."
+                        ));
+                    } else {
+                        progress.accept(WorkflowProgressEvent.of(
+                            "agent2_start",
+                            "Agent 2: Schedule Optimizer",
+                            "Curating conflict-free 5-day timetable with Gemini 3.8 Flash..."
+                        ));
+                    }
+                }
+            }
+
+            @Override
+            public void afterAgentInvocation(AgentResponse response) {
+                LOG.info("[AgentListener.afterAgentInvocation] Agent '{}' finished", response.agentName());
+                @SuppressWarnings("unchecked")
+                Consumer<WorkflowProgressEvent> progress = response.agenticScope().executionContextAs(Consumer.class);
+                if (progress != null) {
+                    if (response.agentName().toLowerCase().contains("validator") || response.agentName().equals("validate")) {
+                        if (response.output() instanceof ValidationResult vr && vr.valid()) {
+                            progress.accept(WorkflowProgressEvent.of(
+                                "agent1_done",
+                                "Agent 1: Guardrail Validator",
+                                "Input validated successfully! Topics: " + (vr.sanitizedInterests() != null ? vr.sanitizedInterests() : "")
+                            ));
+                        }
+                    } else {
+                        progress.accept(WorkflowProgressEvent.of(
+                            "agent2_done",
+                            "Agent 2: Schedule Optimizer",
+                            "5-day conference timetable curated successfully!"
+                        ));
+                    }
+                }
+            }
+
+            @Override
+            public void beforeAgentToolExecution(BeforeAgentToolExecution tool) {
+                String toolName = (tool.toolExecution() != null && tool.toolExecution().request() != null)
+                    ? tool.toolExecution().request().name()
+                    : "tool";
+                LOG.info("[AgentListener.beforeAgentToolExecution] Tool: {}", toolName);
+                @SuppressWarnings("unchecked")
+                Consumer<WorkflowProgressEvent> progress = tool.agenticScope().executionContextAs(Consumer.class);
+                if (progress != null) {
+                    progress.accept(WorkflowProgressEvent.of(
+                        "tool_call",
+                        "Agent 2: Schedule Optimizer",
+                        "Searching session catalog via tool '" + toolName + "'..."
+                    ));
+                }
+            }
+
+            @Override
+            public boolean inheritedBySubagents() {
+                return true;
+            }
+        };
+
         // Agent 1: Interest Validation & Guardrail Agent
         this.validatorAgent = AgenticServices.agentBuilder(InterestValidatorAgent.class)
             .chatModel(chatModel)
             .outputKey("validationResult")
+            .listener(agentObservabilityListener)
             .build();
 
         // Agent 2: Conference Schedule Builder Agent (equipped with conference tools)
@@ -49,33 +129,58 @@ public class DevoxxAgentWorkflowService {
             .chatModel(chatModel)
             .outputKey("schedule")
             .tools(conferenceTools)
+            .listener(agentObservabilityListener)
             .build();
 
-        LOG.info("LangChain4j 2-agent system initialized successfully.");
+        LOG.info("LangChain4j 2-agent system initialized successfully with observability listener.");
     }
 
     /**
-     * Executes the 2-agent sequence:
-     * 1. Agent 1 checks user interests (guardrail: no prompt injection, offensive text, or off-topic spam).
-     * 2. If valid, Agent 2 builds a personalized Devoxx Belgium 2026 conference schedule using real talks.
+     * Executes the 2-agent sequence without streaming callback.
      */
     public ScheduleResponse processScheduleRequest(String userInterests) {
+        return processScheduleRequestWithProgress(userInterests, null);
+    }
+
+    /**
+     * Executes the 2-agent sequence with a live progress listener hooked into the AgenticScope.
+     */
+    public ScheduleResponse processScheduleRequestWithProgress(
+        String userInterests,
+        Consumer<WorkflowProgressEvent> progressConsumer
+    ) {
         if (userInterests == null || userInterests.trim().isBlank()) {
-            return ScheduleResponse.rejected("Please enter one or more topics, technologies, or themes you are interested in.");
+            ScheduleResponse rejection = ScheduleResponse.rejected("Please enter one or more topics, technologies, or themes you are interested in.");
+            if (progressConsumer != null) {
+                progressConsumer.accept(WorkflowProgressEvent.rejected(rejection.validationMessage(), 0L));
+            }
+            return rejection;
         }
 
+        long totalStartTime = System.currentTimeMillis();
         String rawInput = userInterests.trim();
 
         // Establish an AgenticScope across the 2-agent sequence
         dev.langchain4j.agentic.scope.DefaultAgenticScope scope =
             dev.langchain4j.agentic.scope.DefaultAgenticScope.ephemeralAgenticScope();
+        if (progressConsumer != null) {
+            scope.writeExecutionContext(Consumer.class, progressConsumer);
+        }
         dev.langchain4j.invocation.LangChain4jManaged.setCurrent(
-            java.util.Map.of(dev.langchain4j.agentic.scope.AgenticScope.class, scope)
+            Map.of(dev.langchain4j.agentic.scope.AgenticScope.class, scope)
         );
 
         try {
             LOG.info("Step 1 [Agent 1 - Validator]: Validating input '{}'", rawInput);
+            if (progressConsumer != null) {
+                progressConsumer.accept(WorkflowProgressEvent.of(
+                    "agent1_start",
+                    "Agent 1: Guardrail Validator",
+                    "Analyzing input for safety, prompt injection defenses, and technical relevance..."
+                ));
+            }
 
+            long a1StartTime = System.currentTimeMillis();
             ValidationResult validation;
             try {
                 validation = validatorAgent.validate(rawInput);
@@ -83,16 +188,31 @@ public class DevoxxAgentWorkflowService {
                 LOG.error("Error executing InterestValidatorAgent", e);
                 validation = performFallbackValidation(rawInput);
             }
+            long a1Duration = System.currentTimeMillis() - a1StartTime;
 
-            LOG.info("Agent 1 Result: valid={}, reason='{}', sanitized='{}'",
-                validation.valid(), validation.reason(), validation.sanitizedInterests());
+            LOG.info("Agent 1 Result in {}ms: valid={}, reason='{}', sanitized='{}'",
+                a1Duration, validation.valid(), validation.reason(), validation.sanitizedInterests());
 
             // Short-circuit if validation fails
             if (!validation.valid()) {
                 String rejectMsg = (validation.reason() != null && !validation.reason().isBlank())
                     ? validation.reason()
                     : "The request could not be accepted. Please enter topics related to software engineering or technology.";
-                return new ScheduleResponse(false, rejectMsg, rawInput, null, List.of());
+                ScheduleResponse rejection = new ScheduleResponse(false, rejectMsg, rawInput, null, List.of());
+                if (progressConsumer != null) {
+                    progressConsumer.accept(WorkflowProgressEvent.rejected(rejectMsg, a1Duration));
+                }
+                return rejection;
+            }
+
+            if (progressConsumer != null) {
+                progressConsumer.accept(WorkflowProgressEvent.of(
+                    "agent1_done",
+                    "Agent 1: Guardrail Validator",
+                    String.format(Locale.US, "Passed guardrail in %.1fs! Topics: %s", a1Duration / 1000.0,
+                        (validation.sanitizedInterests() != null ? validation.sanitizedInterests() : rawInput)),
+                    a1Duration
+                ));
             }
 
             // Step 2: Query candidate talks for the validated interests
@@ -101,6 +221,13 @@ public class DevoxxAgentWorkflowService {
                 : rawInput;
 
             LOG.info("Step 2 [Agent 2 - Schedule Builder]: Building schedule for query '{}'", query);
+            if (progressConsumer != null) {
+                progressConsumer.accept(WorkflowProgressEvent.of(
+                    "indexing",
+                    "Devoxx Catalog Indexer",
+                    "Searching 201 Devoxx Belgium 2026 sessions for candidate talks..."
+                ));
+            }
 
             List<ConferenceTalk> matched = new ArrayList<>(conferenceService.searchTalks(query, null, 35));
             if (matched.size() < 15) {
@@ -113,10 +240,21 @@ public class DevoxxAgentWorkflowService {
 
             String candidatePrompt = conferenceService.formatTalksForPrompt(matched);
 
+            if (progressConsumer != null) {
+                progressConsumer.accept(WorkflowProgressEvent.of(
+                    "agent2_start",
+                    "Agent 2: Schedule Optimizer",
+                    "Synthesizing personalized, conflict-free 5-day agenda with Gemini 3.8 Flash..."
+                ));
+            }
+
+            long a2StartTime = System.currentTimeMillis();
+            ScheduleResponse finalResponse = null;
+
             try {
                 ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
                 if (response != null) {
-                    return new ScheduleResponse(
+                    finalResponse = new ScheduleResponse(
                         true,
                         null,
                         response.theme() != null ? response.theme() : query,
@@ -128,8 +266,26 @@ public class DevoxxAgentWorkflowService {
                 LOG.error("Error executing ScheduleBuilderAgent", e);
             }
 
-            // Fallback programmatic schedule generation if agentic call experienced issues
-            return buildFallbackSchedule(query, matched);
+            if (finalResponse == null) {
+                finalResponse = buildFallbackSchedule(query, matched);
+            }
+
+            long a2Duration = System.currentTimeMillis() - a2StartTime;
+            long totalDuration = System.currentTimeMillis() - totalStartTime;
+
+            LOG.info("Agent 2 finished in {}ms. Total curation duration: {}ms", a2Duration, totalDuration);
+
+            if (progressConsumer != null) {
+                progressConsumer.accept(WorkflowProgressEvent.of(
+                    "agent2_done",
+                    "Agent 2: Schedule Optimizer",
+                    String.format(Locale.US, "5-day timetable synthesized in %.1fs!", a2Duration / 1000.0),
+                    a2Duration
+                ));
+                progressConsumer.accept(WorkflowProgressEvent.complete(finalResponse, totalDuration));
+            }
+
+            return finalResponse;
         } finally {
             dev.langchain4j.invocation.LangChain4jManaged.removeCurrent();
         }

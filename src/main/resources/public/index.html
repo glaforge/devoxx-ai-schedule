@@ -169,22 +169,61 @@
       </section>
 
       <!-- Agent Workflow Status Bar (Hidden until active) -->
-      <section id="agentWorkflowStatus" class="hidden glass rounded-xl p-4 border border-slate-800 transition-all duration-300">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex items-center gap-3 w-full sm:w-auto">
-            <div id="agent1Badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-300">
-              <span id="agent1Spinner" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-              <span class="font-medium">Agent 1: Guardrail Validator</span>
-            </div>
-            <span class="text-slate-600 hidden sm:inline">➔</span>
-            <div id="agent2Badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-500">
-              <span id="agent2Spinner" class="w-2 h-2 rounded-full bg-slate-600"></span>
-              <span class="font-medium">Agent 2: Schedule Optimizer</span>
-            </div>
+      <section id="agentWorkflowStatus" class="hidden glass rounded-xl p-5 border border-slate-800 transition-all duration-300 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Live Agentic Execution</span>
           </div>
-          <div id="statusMessage" class="text-xs text-slate-400 italic">
-            Validating input safety & conference relevance...
+          <div id="totalTimer" class="text-xs font-mono text-slate-400 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">
+            Elapsed: 0.0s
           </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- Step 1: Agent 1 Guardrail -->
+          <div id="stepAgent1" class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span id="agent1Dot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+              <div>
+                <div class="text-xs font-semibold text-slate-200">1. Guardrail Validator</div>
+                <div id="agent1Subtext" class="text-[11px] text-slate-500">Safety & relevance check</div>
+              </div>
+            </div>
+            <span id="agent1Timer" class="text-xs font-mono text-slate-400">--</span>
+          </div>
+
+          <!-- Step 2: Catalog Search & Tools -->
+          <div id="stepCatalog" class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span id="catalogDot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+              <div>
+                <div class="text-xs font-semibold text-slate-200">2. Catalog & Tools</div>
+                <div id="catalogSubtext" class="text-[11px] text-slate-500">Indexing sessions</div>
+              </div>
+            </div>
+            <span id="catalogTimer" class="text-xs font-mono text-slate-400">--</span>
+          </div>
+
+          <!-- Step 3: Agent 2 Schedule Optimizer -->
+          <div id="stepAgent2" class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span id="agent2Dot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+              <div>
+                <div class="text-xs font-semibold text-slate-200">3. Schedule Optimizer</div>
+                <div id="agent2Subtext" class="text-[11px] text-slate-500">Gemini 3.8 Flash synthesis</div>
+              </div>
+            </div>
+            <span id="agent2Timer" class="text-xs font-mono text-slate-400">--</span>
+          </div>
+        </div>
+
+        <div class="pt-1 flex items-center gap-2 text-xs text-slate-400 border-t border-slate-800/60">
+          <svg class="w-3.5 h-3.5 text-orange-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span id="statusMessage" class="font-mono text-slate-300 truncate">Initializing agentic pipeline...</span>
         </div>
       </section>
 
@@ -260,8 +299,22 @@
     const interestsInput = document.getElementById('interestsInput');
     const submitBtn = document.getElementById('submitBtn');
     const agentWorkflowStatus = document.getElementById('agentWorkflowStatus');
-    const agent1Badge = document.getElementById('agent1Badge');
-    const agent2Badge = document.getElementById('agent2Badge');
+    const totalTimer = document.getElementById('totalTimer');
+    const stepAgent1 = document.getElementById('stepAgent1');
+    const agent1Dot = document.getElementById('agent1Dot');
+    const agent1Subtext = document.getElementById('agent1Subtext');
+    const agent1Timer = document.getElementById('agent1Timer');
+
+    const stepCatalog = document.getElementById('stepCatalog');
+    const catalogDot = document.getElementById('catalogDot');
+    const catalogSubtext = document.getElementById('catalogSubtext');
+    const catalogTimer = document.getElementById('catalogTimer');
+
+    const stepAgent2 = document.getElementById('stepAgent2');
+    const agent2Dot = document.getElementById('agent2Dot');
+    const agent2Subtext = document.getElementById('agent2Subtext');
+    const agent2Timer = document.getElementById('agent2Timer');
+
     const statusMessage = document.getElementById('statusMessage');
     const rejectionCard = document.getElementById('rejectionCard');
     const rejectionReason = document.getElementById('rejectionReason');
@@ -281,7 +334,87 @@
       });
     });
 
-    scheduleForm.addEventListener('submit', async (e) => {
+    function resetStepStyles() {
+      totalTimer.textContent = "Elapsed: 0.0s";
+
+      stepAgent1.className = "p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between";
+      agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+      agent1Timer.textContent = "--";
+      agent1Timer.className = "text-xs font-mono text-slate-400";
+      agent1Subtext.textContent = "Safety & relevance check";
+      agent1Subtext.className = "text-[11px] text-slate-500";
+
+      stepCatalog.className = "p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between";
+      catalogDot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+      catalogTimer.textContent = "--";
+      catalogTimer.className = "text-xs font-mono text-slate-400";
+      catalogSubtext.textContent = "Indexing sessions";
+      catalogSubtext.className = "text-[11px] text-slate-500";
+
+      stepAgent2.className = "p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between";
+      agent2Dot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+      agent2Timer.textContent = "--";
+      agent2Timer.className = "text-xs font-mono text-slate-400";
+      agent2Subtext.textContent = "Gemini 3.8 Flash synthesis";
+      agent2Subtext.className = "text-[11px] text-slate-500";
+    }
+
+    function setStepActive(stepId, text) {
+      if (stepId === 'agent1') {
+        stepAgent1.className = "p-3 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-200 transition-all flex items-center justify-between shadow-lg shadow-amber-500/5";
+        agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
+        agent1Subtext.textContent = text || "Validating prompt...";
+        agent1Subtext.className = "text-[11px] text-amber-300/90";
+      } else if (stepId === 'catalog') {
+        stepCatalog.className = "p-3 rounded-lg bg-blue-500/10 border border-blue-500/40 text-blue-200 transition-all flex items-center justify-between shadow-lg shadow-blue-500/5";
+        catalogDot.className = "w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse";
+        catalogSubtext.textContent = text || "Searching catalog...";
+        catalogSubtext.className = "text-[11px] text-blue-300/90";
+      } else if (stepId === 'agent2') {
+        stepAgent2.className = "p-3 rounded-lg bg-orange-500/10 border border-orange-500/40 text-orange-200 transition-all flex items-center justify-between shadow-lg shadow-orange-500/5";
+        agent2Dot.className = "w-2.5 h-2.5 rounded-full bg-orange-400 animate-ping";
+        agent2Subtext.textContent = text || "Synthesizing schedule...";
+        agent2Subtext.className = "text-[11px] text-orange-300/90";
+      }
+    }
+
+    function setStepComplete(stepId, durationText, subtext) {
+      if (stepId === 'agent1') {
+        stepAgent1.className = "p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 transition-all flex items-center justify-between";
+        agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+        agent1Timer.textContent = `✓ ${durationText}`;
+        agent1Timer.className = "text-xs font-mono font-semibold text-emerald-400";
+        if (subtext) agent1Subtext.textContent = subtext;
+        agent1Subtext.className = "text-[11px] text-emerald-400/80";
+      } else if (stepId === 'catalog') {
+        stepCatalog.className = "p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 transition-all flex items-center justify-between";
+        catalogDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+        catalogTimer.textContent = `✓ ${durationText}`;
+        catalogTimer.className = "text-xs font-mono font-semibold text-emerald-400";
+        if (subtext) catalogSubtext.textContent = subtext;
+        catalogSubtext.className = "text-[11px] text-emerald-400/80";
+      } else if (stepId === 'agent2') {
+        stepAgent2.className = "p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 transition-all flex items-center justify-between";
+        agent2Dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+        agent2Timer.textContent = `✓ ${durationText}`;
+        agent2Timer.className = "text-xs font-mono font-semibold text-emerald-400";
+        if (subtext) agent2Subtext.textContent = subtext;
+        agent2Subtext.className = "text-[11px] text-emerald-400/80";
+      }
+    }
+
+    function setStepFailed(stepId, reason) {
+      if (stepId === 'agent1') {
+        stepAgent1.className = "p-3 rounded-lg bg-rose-950/50 border border-rose-500/50 text-rose-200 transition-all flex items-center justify-between";
+        agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-rose-400";
+        agent1Timer.textContent = "✕ Rejected";
+        agent1Timer.className = "text-xs font-mono font-semibold text-rose-400";
+        agent1Subtext.textContent = "Validation rejected";
+        agent1Subtext.className = "text-[11px] text-rose-400";
+      }
+    }
+
+    scheduleForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const interests = interestsInput.value.trim();
       if (!interests) return;
@@ -291,39 +424,120 @@
       resultsSection.classList.add('hidden');
       agentWorkflowStatus.classList.remove('hidden');
       submitBtn.disabled = true;
+      resetStepStyles();
 
-      // Agent 1 active
-      agent1Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300";
-      agent2Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-500";
-      statusMessage.textContent = "Agent 1 (Guardrail) validating prompt safety and relevance...";
+      // Timers state
+      const startTime = Date.now();
+      let a1StartTime = startTime;
+      let a2StartTime = null;
+      let catalogStartTime = null;
+      let activeStep = 1; // 1: Agent 1, 2: Catalog, 3: Agent 2
 
-      try {
-        const response = await fetch('/api/schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ interests })
-        });
+      const timerInterval = setInterval(() => {
+        const now = Date.now();
+        const totalSec = ((now - startTime) / 1000).toFixed(1);
+        totalTimer.textContent = `Elapsed: ${totalSec}s`;
 
-        const data = await response.json();
-        currentScheduleData = data;
+        if (activeStep === 1) {
+          agent1Timer.textContent = `${((now - a1StartTime) / 1000).toFixed(1)}s`;
+        } else if (activeStep === 2 && catalogStartTime) {
+          catalogTimer.textContent = `${((now - catalogStartTime) / 1000).toFixed(1)}s`;
+        } else if (activeStep === 3 && a2StartTime) {
+          agent2Timer.textContent = `${((now - a2StartTime) / 1000).toFixed(1)}s`;
+        }
+      }, 100);
 
-        // Animate Agent 2 completion
-        agent1Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300";
-        agent2Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-xs text-orange-300";
-        statusMessage.textContent = "Agent 2 completed personalized timetable curation!";
+      setStepActive('agent1', 'Evaluating prompt safety & relevance...');
+      statusMessage.textContent = 'Agent 1: Guardrail Validator initializing...';
 
-        setTimeout(() => {
-          agentWorkflowStatus.classList.add('hidden');
-          renderResults(data);
-        }, 600);
+      // Connect to Server-Sent Events stream
+      const streamUrl = `/api/schedule/stream?interests=${encodeURIComponent(interests)}`;
+      const eventSource = new EventSource(streamUrl);
 
-      } catch (err) {
-        console.error("Fetch error:", err);
-        agentWorkflowStatus.classList.add('hidden');
-        rejectionReason.textContent = "An error occurred while connecting to the schedule service. Please try again.";
-        rejectionCard.classList.remove('hidden');
-      } finally {
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleProgressEvent(data);
+        } catch (err) {
+          console.error("Error parsing SSE event data:", err, event.data);
+        }
+      };
+
+      eventSource.onerror = (err) => {
+        console.error("SSE connection error:", err);
+        eventSource.close();
+        clearInterval(timerInterval);
         submitBtn.disabled = false;
+        if (resultsSection.classList.contains('hidden') && rejectionCard.classList.contains('hidden')) {
+          rejectionReason.textContent = "Connection to schedule stream was interrupted. Please try again.";
+          rejectionCard.classList.remove('hidden');
+        }
+      };
+
+      function handleProgressEvent(data) {
+        if (data.message) {
+          statusMessage.textContent = data.message;
+        }
+
+        switch (data.stage) {
+          case 'agent1_start':
+            activeStep = 1;
+            setStepActive('agent1', data.message);
+            break;
+
+          case 'agent1_done':
+            const a1Sec = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : agent1Timer.textContent;
+            setStepComplete('agent1', a1Sec, 'Prompt verified & safe');
+            break;
+
+          case 'indexing':
+          case 'tool_call':
+            if (activeStep < 2) {
+              activeStep = 2;
+              catalogStartTime = Date.now();
+              setStepActive('catalog', data.message);
+            } else {
+              catalogSubtext.textContent = data.message;
+            }
+            break;
+
+          case 'agent2_start':
+            if (activeStep < 3) {
+              const catSec = catalogStartTime ? ((Date.now() - catalogStartTime) / 1000).toFixed(1) + 's' : '0.4s';
+              setStepComplete('catalog', catSec, 'Catalog sessions indexed');
+              activeStep = 3;
+              a2StartTime = Date.now();
+              setStepActive('agent2', data.message);
+            }
+            break;
+
+          case 'agent2_done':
+            const a2Sec = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : agent2Timer.textContent;
+            setStepComplete('agent2', a2Sec, '5-day agenda synthesized');
+            break;
+
+          case 'complete':
+            clearInterval(timerInterval);
+            eventSource.close();
+            submitBtn.disabled = false;
+            const finalSec = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : totalTimer.textContent;
+            totalTimer.textContent = `Total time: ${finalSec}`;
+            currentScheduleData = data.schedule;
+
+            setTimeout(() => {
+              renderResults(data.schedule);
+            }, 500);
+            break;
+
+          case 'rejected':
+            clearInterval(timerInterval);
+            eventSource.close();
+            submitBtn.disabled = false;
+            setStepFailed('agent1', data.message);
+            rejectionReason.textContent = data.message || "Your request was declined by the safety guardrail agent. Please enter technical conference topics.";
+            rejectionCard.classList.remove('hidden');
+            break;
+        }
       }
     });
 
