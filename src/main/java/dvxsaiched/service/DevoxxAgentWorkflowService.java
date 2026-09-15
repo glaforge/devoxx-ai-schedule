@@ -65,65 +65,74 @@ public class DevoxxAgentWorkflowService {
         }
 
         String rawInput = userInterests.trim();
-        LOG.info("Step 1 [Agent 1 - Validator]: Validating input '{}'", rawInput);
 
-        ValidationResult validation;
+        // Establish an AgenticScope across the 2-agent sequence
+        dev.langchain4j.agentic.scope.DefaultAgenticScope scope =
+            dev.langchain4j.agentic.scope.DefaultAgenticScope.ephemeralAgenticScope();
+        dev.langchain4j.invocation.LangChain4jManaged.setCurrent(
+            java.util.Map.of(dev.langchain4j.agentic.scope.AgenticScope.class, scope)
+        );
+
         try {
-            validation = validatorAgent.validate(rawInput);
-        } catch (Exception e) {
-            LOG.error("Error executing InterestValidatorAgent", e);
-            // Fallback: If validator call fails, perform basic safety checks
-            validation = performFallbackValidation(rawInput);
-        }
+            LOG.info("Step 1 [Agent 1 - Validator]: Validating input '{}'", rawInput);
 
-        LOG.info("Agent 1 Result: valid={}, reason='{}', sanitized='{}'",
-            validation.valid(), validation.reason(), validation.sanitizedInterests());
+            ValidationResult validation;
+            try {
+                validation = validatorAgent.validate(rawInput);
+            } catch (Exception e) {
+                LOG.error("Error executing InterestValidatorAgent", e);
+                validation = performFallbackValidation(rawInput);
+            }
 
-        // Short-circuit if validation fails
-        if (!validation.valid()) {
-            String rejectMsg = (validation.reason() != null && !validation.reason().isBlank())
-                ? validation.reason()
-                : "The request could not be accepted. Please enter topics related to software engineering or technology.";
-            return new ScheduleResponse(false, rejectMsg, rawInput, null, List.of());
-        }
+            LOG.info("Agent 1 Result: valid={}, reason='{}', sanitized='{}'",
+                validation.valid(), validation.reason(), validation.sanitizedInterests());
 
-        // Step 2: Query candidate talks for the validated interests
-        String query = (validation.sanitizedInterests() != null && !validation.sanitizedInterests().isBlank())
-            ? validation.sanitizedInterests()
-            : rawInput;
+            // Short-circuit if validation fails
+            if (!validation.valid()) {
+                String rejectMsg = (validation.reason() != null && !validation.reason().isBlank())
+                    ? validation.reason()
+                    : "The request could not be accepted. Please enter topics related to software engineering or technology.";
+                return new ScheduleResponse(false, rejectMsg, rawInput, null, List.of());
+            }
 
-        LOG.info("Step 2 [Agent 2 - Schedule Builder]: Building schedule for query '{}'", query);
+            // Step 2: Query candidate talks for the validated interests
+            String query = (validation.sanitizedInterests() != null && !validation.sanitizedInterests().isBlank())
+                ? validation.sanitizedInterests()
+                : rawInput;
 
-        List<ConferenceTalk> matched = new ArrayList<>(conferenceService.searchTalks(query, null, 35));
-        if (matched.size() < 15) {
-            // Supplement with top talks to ensure all slots have high quality choices
-            for (ConferenceTalk top : conferenceService.getTopTalks(20)) {
-                if (matched.stream().noneMatch(t -> t.id() == top.id())) {
-                    matched.add(top);
+            LOG.info("Step 2 [Agent 2 - Schedule Builder]: Building schedule for query '{}'", query);
+
+            List<ConferenceTalk> matched = new ArrayList<>(conferenceService.searchTalks(query, null, 35));
+            if (matched.size() < 15) {
+                for (ConferenceTalk top : conferenceService.getTopTalks(20)) {
+                    if (matched.stream().noneMatch(t -> t.id() == top.id())) {
+                        matched.add(top);
+                    }
                 }
             }
-        }
 
-        String candidatePrompt = conferenceService.formatTalksForPrompt(matched);
+            String candidatePrompt = conferenceService.formatTalksForPrompt(matched);
 
-        try {
-            ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
-            if (response != null) {
-                // Ensure valid flag is set to true on successful generation
-                return new ScheduleResponse(
-                    true,
-                    null,
-                    response.theme() != null ? response.theme() : query,
-                    response.overview(),
-                    response.days() != null ? response.days() : List.of()
-                );
+            try {
+                ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
+                if (response != null) {
+                    return new ScheduleResponse(
+                        true,
+                        null,
+                        response.theme() != null ? response.theme() : query,
+                        response.overview(),
+                        response.days() != null ? response.days() : List.of()
+                    );
+                }
+            } catch (Exception e) {
+                LOG.error("Error executing ScheduleBuilderAgent", e);
             }
-        } catch (Exception e) {
-            LOG.error("Error executing ScheduleBuilderAgent", e);
-        }
 
-        // Fallback programmatic schedule generation if agentic call experienced issues
-        return buildFallbackSchedule(query, matched);
+            // Fallback programmatic schedule generation if agentic call experienced issues
+            return buildFallbackSchedule(query, matched);
+        } finally {
+            dev.langchain4j.invocation.LangChain4jManaged.removeCurrent();
+        }
     }
 
     private ValidationResult performFallbackValidation(String input) {
