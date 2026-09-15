@@ -1,9 +1,9 @@
-package dvxsaiched.agent;
+package dvxaisched.agent;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
-import dvxsaiched.model.ConferenceTalk;
-import dvxsaiched.service.DevoxxConferenceService;
+import dvxaisched.model.ConferenceTalk;
+import dvxaisched.service.DevoxxConferenceService;
 import jakarta.inject.Singleton;
 
 import java.util.List;

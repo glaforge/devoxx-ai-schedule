@@ -1,4 +1,4 @@
-package dvxsaiched.controller;
+package dvxaisched.controller;
 
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;

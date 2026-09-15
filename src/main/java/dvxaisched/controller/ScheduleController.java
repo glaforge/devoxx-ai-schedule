@@ -1,10 +1,10 @@
-package dvxsaiched.controller;
+package dvxaisched.controller;
 
-import dvxsaiched.model.ConferenceTalk;
-import dvxsaiched.model.ScheduleRequest;
-import dvxsaiched.model.ScheduleResponse;
-import dvxsaiched.service.DevoxxAgentWorkflowService;
-import dvxsaiched.service.DevoxxConferenceService;
+import dvxaisched.model.ConferenceTalk;
+import dvxaisched.model.ScheduleRequest;
+import dvxaisched.model.ScheduleResponse;
+import dvxaisched.service.DevoxxAgentWorkflowService;
+import dvxaisched.service.DevoxxConferenceService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;

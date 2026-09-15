@@ -1,10 +1,10 @@
-package dvxsaiched.agent;
+package dvxaisched.agent;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
-import dvxsaiched.model.ValidationResult;
+import dvxaisched.model.ValidationResult;
 
 public interface InterestValidatorAgent {
 

@@ -1,4 +1,4 @@
-package dvxsaiched;
+package dvxaisched;
 
 
 import io.micronaut.runtime.EmbeddedApplication;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import jakarta.inject.Inject;
 
 @MicronautTest
-class DvxsaichedTest {
+class DvxaischedTest {
 
     @Inject
     EmbeddedApplication<?> application;

@@ -1,7 +1,7 @@
-package dvxsaiched.service;
+package dvxaisched.service;
 
-import dvxsaiched.model.ConferenceTalk;
-import dvxsaiched.model.SpeakerInfo;
+import dvxaisched.model.ConferenceTalk;
+import dvxaisched.model.SpeakerInfo;
 import io.micronaut.core.io.ResourceResolver;
 import io.micronaut.serde.ObjectMapper;
 import jakarta.annotation.PostConstruct;

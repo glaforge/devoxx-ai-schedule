@@ -1,4 +1,4 @@
-package dvxsaiched.config;
+package dvxaisched.config;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.google.genai.GoogleGenAiChatModel;

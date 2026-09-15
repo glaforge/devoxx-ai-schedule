@@ -1,13 +1,13 @@
-package dvxsaiched.service;
+package dvxaisched.service;
 
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.model.chat.ChatModel;
-import dvxsaiched.agent.DevoxxConferenceTools;
-import dvxsaiched.agent.InterestValidatorAgent;
-import dvxsaiched.agent.ScheduleBuilderAgent;
-import dvxsaiched.model.ConferenceTalk;
-import dvxsaiched.model.ScheduleResponse;
-import dvxsaiched.model.ValidationResult;
+import dvxaisched.agent.DevoxxConferenceTools;
+import dvxaisched.agent.InterestValidatorAgent;
+import dvxaisched.agent.ScheduleBuilderAgent;
+import dvxaisched.model.ConferenceTalk;
+import dvxaisched.model.ScheduleResponse;
+import dvxaisched.model.ValidationResult;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,7 +145,7 @@ public class DevoxxAgentWorkflowService {
 
     private ScheduleResponse buildFallbackSchedule(String query, List<ConferenceTalk> talks) {
         LOG.info("Building fallback structured schedule for query '{}'", query);
-        List<dvxsaiched.model.DaySchedule> days = new ArrayList<>();
+        List<dvxaisched.model.DaySchedule> days = new ArrayList<>();
         String[] dayNames = {"monday", "tuesday", "wednesday", "thursday", "friday"};
         String[] dates = {"2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"};
         String[] labels = {
@@ -162,9 +162,9 @@ public class DevoxxAgentWorkflowService {
                 .filter(t -> t.day().equalsIgnoreCase(day))
                 .toList();
 
-            List<dvxsaiched.model.ScheduledTalk> scheduled = new ArrayList<>();
+            List<dvxaisched.model.ScheduledTalk> scheduled = new ArrayList<>();
             for (ConferenceTalk t : dayTalks) {
-                scheduled.add(new dvxsaiched.model.ScheduledTalk(
+                scheduled.add(new dvxaisched.model.ScheduledTalk(
                     t.id(),
                     t.day(),
                     t.date(),
@@ -178,7 +178,7 @@ public class DevoxxAgentWorkflowService {
                     "Matches your interest in " + query
                 ));
             }
-            days.add(new dvxsaiched.model.DaySchedule(day, dates[i], labels[i], scheduled));
+            days.add(new dvxaisched.model.DaySchedule(day, dates[i], labels[i], scheduled));
         }
 
         return new ScheduleResponse(

@@ -1,7 +1,7 @@
-package dvxsaiched;
+package dvxaisched;
 
-import dvxsaiched.model.ConferenceTalk;
-import dvxsaiched.service.DevoxxConferenceService;
+import dvxaisched.model.ConferenceTalk;
+import dvxaisched.service.DevoxxConferenceService;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;

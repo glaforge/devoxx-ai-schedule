@@ -1,4 +1,4 @@
-# Devoxx Belgium 2026 AI Schedule Builder (`dvxsaiched`)
+# Devoxx Belgium 2026 AI Schedule Builder (`dvxaisched`)
 
 A Micronaut application that leverages LangChain4j's AI Agentic system and Google's Gemini 3.8 Flash model (`gemini-3.8-flash` via `dev.langchain4j:langchain4j-google-genai`) to generate personalized conference schedules for Devoxx Belgium 2026.
 
@@ -17,7 +17,7 @@ A Micronaut application that leverages LangChain4j's AI Agentic system and Googl
 
 ### 2. Tech Stack & Dependencies
 - **Framework**: Micronaut 5.0 (Java 25)
-- **Build Tool**: Gradle (Groovy DSL syntax in [`build.gradle`](file:///Users/glaforge/Projects/dvxsaiched/build.gradle) and [`settings.gradle`](file:///Users/glaforge/Projects/dvxsaiched/settings.gradle))
+- **Build Tool**: Gradle (Groovy DSL syntax in [`build.gradle`](file:///Users/glaforge/Projects/dvxaisched/build.gradle) and [`settings.gradle`](file:///Users/glaforge/Projects/dvxaisched/settings.gradle))
 - **LLM Integration**: `dev.langchain4j:langchain4j-google-genai:1.20.0-beta30` with `gemini-3.8-flash`
 - **Agentic Engine**: `dev.langchain4j:langchain4j-agentic:1.20.0-beta30`
 - **Data Source**: Embedded official Devoxx Belgium 2026 schedule dataset (201 talks)
@@ -29,7 +29,7 @@ A Micronaut application that leverages LangChain4j's AI Agentic system and Googl
 ## Running the Application
 
 ```bash
-cd /Users/glaforge/Projects/dvxsaiched
+cd /Users/glaforge/Projects/dvxaisched
 export GEMINI_API_KEY="your-gemini-api-key"
 ./gradlew run
 ```

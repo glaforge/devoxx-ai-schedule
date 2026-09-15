@@ -1,7 +1,7 @@
-package dvxsaiched;
+package dvxaisched;
 
-import dvxsaiched.model.ScheduleRequest;
-import dvxsaiched.model.ScheduleResponse;
+import dvxaisched.model.ScheduleRequest;
+import dvxaisched.model.ScheduleResponse;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;

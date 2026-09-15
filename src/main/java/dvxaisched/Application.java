@@ -1,4 +1,4 @@
-package dvxsaiched;
+package dvxaisched;
 
 import io.micronaut.runtime.Micronaut;
 
