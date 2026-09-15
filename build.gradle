@@ -1,0 +1,81 @@
+plugins {
+    id "io.micronaut.application" version "5.0.2"
+    id "com.gradleup.shadow" version "9.4.1"
+    id "io.micronaut.aot" version "5.0.2"
+}
+
+version = "0.1"
+group = "dvxsaiched"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor "io.micronaut:micronaut-http-validation"
+    annotationProcessor "io.micronaut.serde:micronaut-serde-processor"
+    annotationProcessor "io.micronaut.langchain4j:micronaut-langchain4j-processor"
+    implementation "io.micronaut.serde:micronaut-serde-jackson"
+    implementation "io.micronaut.langchain4j:micronaut-langchain4j-core"
+    // Official Google GenAI SDK module for LangChain4j
+    implementation "dev.langchain4j:langchain4j-google-genai:1.20.0-beta30"
+    implementation "dev.langchain4j:langchain4j-agentic:1.20.0-beta30"
+    implementation "io.micronaut:micronaut-http-client"
+    runtimeOnly "ch.qos.logback:logback-classic"
+    testImplementation "io.micronaut:micronaut-http-client"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add("-parameters")
+}
+
+application {
+    mainClass = "dvxsaiched.Application"
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion("25")
+    targetCompatibility = JavaVersion.toVersion("25")
+}
+
+graalvmNative.toolchainDetection = false
+graalvmNative {
+    binaries {
+        all {
+            buildArgs.add("-H:+SharedArenaSupport")
+        }
+    }
+}
+
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("dvxsaiched.*")
+    }
+    aot {
+        optimizeServiceLoading = false
+        convertYamlToJava = false
+        precomputeOperations = true
+        cacheEnvironment = true
+        optimizeClassLoading = true
+        deduceEnvironment = true
+        optimizeNetty = true
+        replaceLogbackXml = true
+    }
+}
+
+tasks.named("dockerfile", io.micronaut.gradle.docker.MicronautDockerfile) {
+    baseImage = "eclipse-temurin:25-jre"
+}
+
+tasks.withType(AbstractTestTask).configureEach {
+    failOnNoDiscoveredTests = false
+}
+
+tasks.withType(Test).configureEach {
+    def apiKey = System.getenv("GEMINI_API_KEY") ?: ""
+    environment "GEMINI_API_KEY", apiKey
+}

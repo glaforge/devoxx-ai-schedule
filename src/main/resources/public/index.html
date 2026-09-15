@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Devoxx Belgium 2026 — AI Agenda Curator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#fef7ee',
+              100: '#fdedd6',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #fb923c 0%, #f43f5e 50%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col font-sans selection:bg-orange-500 selection:text-white bg-slate-950">
+
+  <!-- Background glow effect -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-orange-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-10 left-1/3 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="relative z-10 flex-1 flex flex-col">
+    <!-- Navigation Bar -->
+    <header class="border-b border-slate-800/80 glass sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center font-bold text-white shadow-lg shadow-orange-500/20">
+            DVX
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold tracking-tight text-white text-lg">Devoxx Belgium 2026</span>
+              <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">Oct 5–9</span>
+            </div>
+            <p class="text-xs text-slate-400">Kinepolis Antwerp • AI Schedule Curator</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 text-xs font-mono">
+          <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Gemini 3.8 Flash
+          </span>
+          <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
+            LangChain4j Agentic
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-950/60 border border-orange-500/30 text-orange-300">
+            Micronaut 5
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+      <!-- Hero Header -->
+      <section class="text-center max-w-3xl mx-auto space-y-3 pt-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
+          <span>⚡ Multi-Agent Conference Planning</span>
+          <span class="text-slate-600">•</span>
+          <span class="text-orange-400">196 Sessions Available</span>
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight">
+          Craft Your Personal <br>
+          <span class="gradient-text">Devoxx Belgium 2026</span> Schedule
+        </h1>
+        <p class="text-slate-400 text-sm sm:text-base">
+          Describe your tech stack, goals, or topics of interest. Our two-agent AI system validates your prompt for safety, queries the conference database, and curates a conflict-free personalized agenda.
+        </p>
+      </section>
+
+      <!-- Input Card -->
+      <section class="glass rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-800 space-y-6">
+        <form id="scheduleForm" class="space-y-4">
+          <label for="interestsInput" class="block text-sm font-medium text-slate-200">
+            What topics, technologies, or challenges are you interested in?
+          </label>
+          <div class="relative">
+            <textarea
+              id="interestsInput"
+              rows="3"
+              class="w-full rounded-xl bg-slate-900/90 border border-slate-700/80 px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm leading-relaxed transition resize-y"
+              placeholder="e.g. I am interested in AI agents, LangChain4j, Loop Engineering, and modern Java virtual threads..."
+              required
+            ></textarea>
+          </div>
+
+          <!-- Suggested Chips -->
+          <div class="space-y-2">
+            <span class="text-xs font-medium text-slate-400">Quick ideas:</span>
+            <div class="flex flex-wrap gap-2" id="promptChips">
+              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+                data-prompt="I'm interested in AI agents, Generative AI, LLM evaluation, LangChain4j, and loop engineering.">
+                <span>🤖</span> AI Agents & GenAI
+              </button>
+              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+                data-prompt="A schedule focused on the Java language, latest features, Project Loom virtual threads, Valhalla, Amber, and best practices.">
+                <span>☕</span> Java Language & JVM
+              </button>
+              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+                data-prompt="A geeky agenda with fun, entertaining, surprising topics like robotics, Raspberry Pi, game engines, and space computing.">
+                <span>🕹️</span> Mind the Geek & Quirky
+              </button>
+              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+                data-prompt="Modern enterprise architecture, modular monoliths, distributed systems, event-driven design, and guardrails.">
+                <span>🏛️</span> Architecture & Modernization
+              </button>
+              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+                data-prompt="Cloud-native Java, Kubernetes platforms, container hardening, vector databases, and GPU infrastructure.">
+                <span>☁️</span> Cloud Native & Kubernetes
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center justify-between">
+            <p class="text-xs text-slate-500">
+              Evaluated by Agent 1 (Safety Guardrail) ➔ Agent 2 (Schedule Optimizer)
+            </p>
+            <button
+              type="submit"
+              id="submitBtn"
+              class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-medium text-sm shadow-lg shadow-orange-500/25 transition transform active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <svg id="btnIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Build My Schedule</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Agent Workflow Status Bar (Hidden until active) -->
+      <section id="agentWorkflowStatus" class="hidden glass rounded-xl p-4 border border-slate-800 transition-all duration-300">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div id="agent1Badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-300">
+              <span id="agent1Spinner" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+              <span class="font-medium">Agent 1: Guardrail Validator</span>
+            </div>
+            <span class="text-slate-600 hidden sm:inline">➔</span>
+            <div id="agent2Badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-500">
+              <span id="agent2Spinner" class="w-2 h-2 rounded-full bg-slate-600"></span>
+              <span class="font-medium">Agent 2: Schedule Optimizer</span>
+            </div>
+          </div>
+          <div id="statusMessage" class="text-xs text-slate-400 italic">
+            Validating input safety & conference relevance...
+          </div>
+        </div>
+      </section>
+
+      <!-- Error / Rejection Card (Hidden by default) -->
+      <section id="rejectionCard" class="hidden glass rounded-2xl p-6 border border-rose-800/60 bg-rose-950/20 space-y-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div class="space-y-1 flex-1">
+            <h3 class="text-base font-semibold text-rose-200">Request Flagged by Guardrail Agent</h3>
+            <p id="rejectionReason" class="text-sm text-rose-300/90 leading-relaxed"></p>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-rose-900/40 text-xs text-slate-400 flex items-center gap-2">
+          <span>💡 Tip: Try choosing one of the prompt chips above or specify concrete software topics.</span>
+        </div>
+      </section>
+
+      <!-- Results Section (Hidden until schedule generated) -->
+      <section id="resultsSection" class="hidden space-y-6">
+
+        <!-- Theme Header Card -->
+        <div class="glass rounded-2xl p-6 border border-slate-800 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800/80">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-orange-400">Curated Agenda</span>
+              <h2 id="scheduleTheme" class="text-2xl font-bold text-white tracking-tight"></h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="copyMarkdownBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                <span>Copy Markdown</span>
+              </button>
+              <button id="printBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>Print</span>
+              </button>
+            </div>
+          </div>
+          <p id="scheduleOverview" class="text-sm text-slate-300 leading-relaxed"></p>
+        </div>
+
+        <!-- Day Filter Tabs -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800/80 text-sm font-medium" id="dayTabsContainer">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Timetable Agenda Grid -->
+        <div id="agendaCardsContainer" class="space-y-4">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+      <p>Devoxx Belgium 2026 AI Schedule Curator • Built with Micronaut & LangChain4j Agentic System</p>
+    </footer>
+  </div>
+
+  <script>
+    let currentScheduleData = null;
+    let activeDayFilter = 'all';
+
+    const scheduleForm = document.getElementById('scheduleForm');
+    const interestsInput = document.getElementById('interestsInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const agentWorkflowStatus = document.getElementById('agentWorkflowStatus');
+    const agent1Badge = document.getElementById('agent1Badge');
+    const agent2Badge = document.getElementById('agent2Badge');
+    const statusMessage = document.getElementById('statusMessage');
+    const rejectionCard = document.getElementById('rejectionCard');
+    const rejectionReason = document.getElementById('rejectionReason');
+    const resultsSection = document.getElementById('resultsSection');
+    const scheduleTheme = document.getElementById('scheduleTheme');
+    const scheduleOverview = document.getElementById('scheduleOverview');
+    const dayTabsContainer = document.getElementById('dayTabsContainer');
+    const agendaCardsContainer = document.getElementById('agendaCardsContainer');
+    const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
+    const printBtn = document.getElementById('printBtn');
+
+    // Quick chip clicks
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        interestsInput.value = btn.getAttribute('data-prompt');
+        interestsInput.focus();
+      });
+    });
+
+    scheduleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const interests = interestsInput.value.trim();
+      if (!interests) return;
+
+      // Reset states
+      rejectionCard.classList.add('hidden');
+      resultsSection.classList.add('hidden');
+      agentWorkflowStatus.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      // Agent 1 active
+      agent1Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300";
+      agent2Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-500";
+      statusMessage.textContent = "Agent 1 (Guardrail) validating prompt safety and relevance...";
+
+      try {
+        const response = await fetch('/api/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ interests })
+        });
+
+        const data = await response.json();
+        currentScheduleData = data;
+
+        // Animate Agent 2 completion
+        agent1Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300";
+        agent2Badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-xs text-orange-300";
+        statusMessage.textContent = "Agent 2 completed personalized timetable curation!";
+
+        setTimeout(() => {
+          agentWorkflowStatus.classList.add('hidden');
+          renderResults(data);
+        }, 600);
+
+      } catch (err) {
+        console.error("Fetch error:", err);
+        agentWorkflowStatus.classList.add('hidden');
+        rejectionReason.textContent = "An error occurred while connecting to the schedule service. Please try again.";
+        rejectionCard.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    function renderResults(data) {
+      if (!data.valid) {
+        rejectionReason.textContent = data.validationMessage || "Your request was declined by the safety guardrail agent. Please enter technical conference topics.";
+        rejectionCard.classList.remove('hidden');
+        return;
+      }
+
+      scheduleTheme.textContent = data.theme || "Personalized Devoxx Belgium 2026 Schedule";
+      scheduleOverview.textContent = data.overview || "Here is your curated, conflict-free conference agenda.";
+
+      renderDayTabs(data.days || []);
+      renderAgenda(data.days || []);
+      resultsSection.classList.remove('hidden');
+      resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderDayTabs(days) {
+      dayTabsContainer.innerHTML = '';
+
+      const allBtn = document.createElement('button');
+      allBtn.className = `px-4 py-2 rounded-lg transition whitespace-nowrap ${activeDayFilter === 'all' ? 'bg-orange-600 text-white font-semibold shadow' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`;
+      allBtn.textContent = `🌟 Full Week (${getTotalTalks(days)})`;
+      allBtn.onclick = () => {
+        activeDayFilter = 'all';
+        renderDayTabs(days);
+        renderAgenda(days);
+      };
+      dayTabsContainer.appendChild(allBtn);
+
+      days.forEach(d => {
+        const btn = document.createElement('button');
+        const isActive = activeDayFilter === d.day;
+        btn.className = `px-4 py-2 rounded-lg transition whitespace-nowrap ${isActive ? 'bg-orange-600 text-white font-semibold shadow' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`;
+        btn.textContent = `${capitalize(d.day)} (${(d.talks || []).length})`;
+        btn.onclick = () => {
+          activeDayFilter = d.day;
+          renderDayTabs(days);
+          renderAgenda(days);
+        };
+        dayTabsContainer.appendChild(btn);
+      });
+    }
+
+    function getTotalTalks(days) {
+      return days.reduce((acc, d) => acc + (d.talks ? d.talks.length : 0), 0);
+    }
+
+    function renderAgenda(days) {
+      agendaCardsContainer.innerHTML = '';
+
+      const filteredDays = activeDayFilter === 'all' 
+        ? days 
+        : days.filter(d => d.day === activeDayFilter);
+
+      if (filteredDays.length === 0 || getTotalTalks(filteredDays) === 0) {
+        agendaCardsContainer.innerHTML = `
+          <div class="glass p-8 text-center rounded-2xl text-slate-400">
+            No scheduled talks for this filter.
+          </div>
+        `;
+        return;
+      }
+
+      filteredDays.forEach(d => {
+        const daySection = document.createElement('div');
+        daySection.className = "space-y-3 pt-2";
+
+        const dayHeader = document.createElement('div');
+        dayHeader.className = "flex items-center gap-2 text-sm font-bold text-slate-200";
+        dayHeader.innerHTML = `
+          <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+          <span>${d.dayLabel || (capitalize(d.day) + ' - ' + d.date)}</span>
+          <span class="text-xs font-normal text-slate-500">(${(d.talks || []).length} sessions)</span>
+        `;
+        daySection.appendChild(dayHeader);
+
+        const talksList = document.createElement('div');
+        talksList.className = "grid gap-3";
+
+        (d.talks || []).forEach(talk => {
+          const card = document.createElement('div');
+          card.className = "glass-card rounded-xl p-5 hover:border-slate-700 transition flex flex-col md:flex-row md:items-start justify-between gap-4";
+
+          const trackBadgeColor = getTrackColor(talk.track);
+          const typeBadgeColor = getSessionTypeColor(talk.sessionType);
+
+          card.innerHTML = `
+            <div class="flex-shrink-0 md:w-44 space-y-1.5">
+              <div class="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-slate-200 bg-slate-900/90 px-2.5 py-1 rounded-md border border-slate-700/60">
+                <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>${talk.startTime} – ${talk.endTime}</span>
+              </div>
+              <div class="text-xs font-medium text-slate-400 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Room: <strong class="text-slate-300 font-semibold">${talk.room || 'TBA'}</strong></span>
+              </div>
+              <div>
+                <span class="inline-block px-2 py-0.5 text-[11px] font-medium rounded-full ${typeBadgeColor}">
+                  ${talk.sessionType || 'Conference'}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex-1 space-y-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-block px-2.5 py-0.5 text-xs font-medium rounded-md ${trackBadgeColor}">
+                  ${talk.track || 'General'}
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-white tracking-tight leading-snug">
+                ${escapeHtml(talk.title)}
+              </h3>
+              <p class="text-xs text-slate-300">
+                <strong class="text-slate-400">Speaker(s):</strong> ${escapeHtml(talk.speakers || 'TBA')}
+              </p>
+              ${talk.reason ? `
+                <div class="mt-2 text-xs bg-orange-950/20 border border-orange-500/20 rounded-lg p-2.5 text-orange-200/90 flex items-start gap-2">
+                  <span class="text-orange-400 flex-shrink-0">💡</span>
+                  <span class="leading-relaxed"><strong>Why this talk:</strong> ${escapeHtml(talk.reason)}</span>
+                </div>
+              ` : ''}
+            </div>
+          `;
+          talksList.appendChild(card);
+        });
+
+        daySection.appendChild(talksList);
+        agendaCardsContainer.appendChild(daySection);
+      });
+    }
+
+    function getTrackColor(track) {
+      if (!track) return "bg-slate-800 text-slate-300 border border-slate-700";
+      const t = track.toLowerCase();
+      if (t.includes('agentic') || t.includes('tooling') || t.includes('ai')) {
+        return "bg-purple-950/60 text-purple-300 border border-purple-800/60";
+      }
+      if (t.includes('java')) {
+        return "bg-amber-950/60 text-amber-300 border border-amber-800/60";
+      }
+      if (t.includes('mind the geek')) {
+        return "bg-pink-950/60 text-pink-300 border border-pink-800/60";
+      }
+      if (t.includes('cloud') || t.includes('infrastructure')) {
+        return "bg-cyan-950/60 text-cyan-300 border border-cyan-800/60";
+      }
+      if (t.includes('architecture') || t.includes('modernization')) {
+        return "bg-blue-950/60 text-blue-300 border border-blue-800/60";
+      }
+      if (t.includes('security') || t.includes('compliance')) {
+        return "bg-red-950/60 text-red-300 border border-red-800/60";
+      }
+      if (t.includes('practice') || t.includes('development')) {
+        return "bg-emerald-950/60 text-emerald-300 border border-emerald-800/60";
+      }
+      return "bg-slate-800 text-slate-300 border border-slate-700";
+    }
+
+    function getSessionTypeColor(type) {
+      if (!type) return "bg-slate-800 text-slate-300";
+      const s = type.toLowerCase();
+      if (s.includes('deep dive')) return "bg-indigo-900/60 text-indigo-300 border border-indigo-700/50";
+      if (s.includes('keynote')) return "bg-yellow-900/60 text-yellow-300 border border-yellow-700/50";
+      if (s.includes('tools')) return "bg-teal-900/60 text-teal-300 border border-teal-700/50";
+      if (s.includes('bof')) return "bg-purple-900/60 text-purple-300 border border-purple-700/50";
+      if (s.includes('lunch')) return "bg-slate-800 text-slate-300 border border-slate-700";
+      return "bg-slate-800/80 text-slate-300 border border-slate-700/50";
+    }
+
+    function capitalize(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.innerText = text;
+      return div.innerHTML;
+    }
+
+    // Markdown Export
+    copyMarkdownBtn.addEventListener('click', () => {
+      if (!currentScheduleData || !currentScheduleData.days) return;
+
+      let md = `# ${currentScheduleData.theme || 'Devoxx Belgium 2026 Schedule'}\n\n`;
+      if (currentScheduleData.overview) {
+        md += `${currentScheduleData.overview}\n\n---\n\n`;
+      }
+
+      currentScheduleData.days.forEach(d => {
+        md += `## ${d.dayLabel || capitalize(d.day) + ' (' + d.date + ')'}\n\n`;
+        md += `| Time | Room | Track | Title & Speaker | Why It Fits |\n`;
+        md += `| :--- | :--- | :--- | :--- | :--- |\n`;
+        (d.talks || []).forEach(t => {
+          md += `| ${t.startTime} - ${t.endTime} | ${t.room} | ${t.track} | **${t.title}**<br>— *${t.speakers}* | ${t.reason || 'Recommended'} |\n`;
+        });
+        md += `\n`;
+      });
+
+      navigator.clipboard.writeText(md).then(() => {
+        const origText = copyMarkdownBtn.innerHTML;
+        copyMarkdownBtn.innerHTML = `<span>✓ Copied!</span>`;
+        setTimeout(() => copyMarkdownBtn.innerHTML = origText, 2000);
+      });
+    });
+
+    // Print Button
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+  </script>
+</body>
+</html>
