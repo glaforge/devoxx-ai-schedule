@@ -30,13 +30,16 @@ public record DayPlanRequest(
     public String toString() {
         return """
             User interests: %s
-            
+
             Day to schedule: %s (Date: %s, Day id: %s)
-            
+
             Available Devoxx Belgium candidate talks for %s:
             %s
-            
-            Please select and return the conflict-free scheduled talks for %s.
+
+            Instructions for %s:
+            - Select non-overlapping talks strictly in chronological order (each talk's startTime >= previous talk's endTime).
+            - Do NOT pick multiple talks in parallel rooms for the same time slot.
+            - Provide a full day's agenda matching the attendee's interests.
             """.formatted(interests, dayLabel, date, day, dayLabel, candidateTalks, dayLabel);
     }
 }

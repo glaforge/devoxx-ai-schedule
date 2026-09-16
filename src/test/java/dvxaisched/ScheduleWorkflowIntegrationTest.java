@@ -57,6 +57,19 @@ class ScheduleWorkflowIntegrationTest {
             .flatMap(d -> d.talks().stream())
             .anyMatch(t -> t.talkAbstract() != null && !t.talkAbstract().isBlank()),
             "Scheduled talks should have enriched abstracts");
+
+        for (var day : body.days()) {
+            var talks = day.talks();
+            if (talks != null && talks.size() > 1) {
+                for (int i = 0; i < talks.size() - 1; i++) {
+                    var curr = talks.get(i);
+                    var next = talks.get(i + 1);
+                    assertTrue(curr.endTime().compareTo(next.startTime()) <= 0,
+                        "Talk '" + curr.title() + "' (" + curr.endTime() + ") should not overlap with '" +
+                        next.title() + "' (" + next.startTime() + ") on " + day.dayLabel());
+                }
+            }
+        }
     }
 
     @Test

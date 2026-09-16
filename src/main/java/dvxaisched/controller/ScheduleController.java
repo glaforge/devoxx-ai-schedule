@@ -22,6 +22,7 @@ import dvxaisched.model.ScheduleResponse;
 import dvxaisched.model.WorkflowProgressEvent;
 import dvxaisched.service.DevoxxAgentWorkflowService;
 import dvxaisched.service.DevoxxConferenceService;
+import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
@@ -45,13 +46,16 @@ public class ScheduleController {
 
     private final DevoxxAgentWorkflowService workflowService;
     private final DevoxxConferenceService conferenceService;
+    private final String modelName;
 
     public ScheduleController(
         DevoxxAgentWorkflowService workflowService,
-        DevoxxConferenceService conferenceService
+        DevoxxConferenceService conferenceService,
+        @Value("${gemini.model:gemini-3.5-flash-lite}") String modelName
     ) {
         this.workflowService = workflowService;
         this.conferenceService = conferenceService;
+        this.modelName = modelName;
     }
 
     @Post(uri = "/schedule", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
@@ -154,7 +158,7 @@ public class ScheduleController {
             "dates", "October 5-9, 2026",
             "venue", "Kinepolis, Antwerp",
             "totalTalksLoaded", conferenceService.getAllTalks().size(),
-            "model", System.getProperty("gemini.model", "gemini-3.8-flash")
+            "model", modelName
         ));
     }
 }

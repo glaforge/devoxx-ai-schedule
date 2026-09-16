@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -100,7 +101,7 @@ public class DevoxxAgentWorkflowService {
                         progress.accept(WorkflowProgressEvent.of(
                             "agent2_start",
                             "Agent 2: Schedule Optimizer",
-                            "Curating conflict-free conference timetable with Gemini 3.8 Flash..."
+                            "Curating conflict-free conference timetable with Gemini 3.5 Flash-Lite..."
                         ));
                     }
                 }
@@ -342,13 +343,18 @@ public class DevoxxAgentWorkflowService {
 
             for (int i = 0; i < dayNames.length; i++) {
                 String day = dayNames[i];
-                List<ConferenceTalk> dayMatches = new ArrayList<>(conferenceService.searchTalks(query, day, 15));
-                if (dayMatches.size() < 6) {
+                int searchLimit = switch (day) {
+                    case "wednesday", "thursday" -> 25;
+                    case "monday", "tuesday" -> 20;
+                    default -> 15;
+                };
+                List<ConferenceTalk> dayMatches = new ArrayList<>(conferenceService.searchTalks(query, day, searchLimit));
+                if (dayMatches.size() < 10) {
                     for (ConferenceTalk top : conferenceService.getTalksByDay(day)) {
                         if (dayMatches.stream().noneMatch(t -> t.id() == top.id())) {
                             dayMatches.add(top);
                         }
-                        if (dayMatches.size() >= 12) break;
+                        if (dayMatches.size() >= 15) break;
                     }
                 }
                 allCandidateTalks.addAll(dayMatches);
@@ -372,7 +378,8 @@ public class DevoxxAgentWorkflowService {
                 List<DaySchedule> rawDays = parallelScheduleWorkflow.scheduleDays(dayRequests);
                 if (rawDays != null && !rawDays.isEmpty() &&
                     rawDays.stream().anyMatch(d -> d != null && d.talks() != null && !d.talks().isEmpty())) {
-                    List<DaySchedule> enrichedDays = enrichDaysWithAbstracts(rawDays);
+                    List<DaySchedule> deconflictedDays = deconflictAndBackfillDays(rawDays, query);
+                    List<DaySchedule> enrichedDays = enrichDaysWithAbstracts(deconflictedDays);
                     finalResponse = new ScheduleResponse(
                         true,
                         null,
@@ -394,7 +401,8 @@ public class DevoxxAgentWorkflowService {
                     ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
                     if (response != null && response.days() != null && !response.days().isEmpty() &&
                         response.days().stream().anyMatch(d -> d != null && d.talks() != null && !d.talks().isEmpty())) {
-                        List<DaySchedule> enrichedDays = enrichDaysWithAbstracts(response.days());
+                        List<DaySchedule> deconflictedDays = deconflictAndBackfillDays(response.days(), query);
+                        List<DaySchedule> enrichedDays = enrichDaysWithAbstracts(deconflictedDays);
                         finalResponse = new ScheduleResponse(
                             true,
                             null,
@@ -520,12 +528,125 @@ public class DevoxxAgentWorkflowService {
             days.add(new DaySchedule(day, dates[i], labels[i], scheduled));
         }
 
+        List<DaySchedule> deconflictedDays = deconflictAndBackfillDays(days, query);
         return new ScheduleResponse(
             true,
             null,
             "Devoxx Belgium 2026: " + query,
             "Personalized schedule curated for interests in " + query,
-            days
+            deconflictedDays
         );
+    }
+
+    /**
+     * Post-processes day schedules:
+     * 1. Eliminates any overlapping time slots (multi-room collisions).
+     * 2. Backfills empty slots from candidate talks if talk count is below minimum threshold.
+     * 3. Guarantees talks are strictly ordered chronologically.
+     */
+    private List<DaySchedule> deconflictAndBackfillDays(List<DaySchedule> days, String query) {
+        if (days == null) return List.of();
+        List<DaySchedule> result = new ArrayList<>();
+        for (DaySchedule day : days) {
+            if (day == null) continue;
+            result.add(deconflictAndBackfillDay(day, query));
+        }
+        return result;
+    }
+
+    private DaySchedule deconflictAndBackfillDay(DaySchedule daySchedule, String query) {
+        String dayName = daySchedule.day() != null ? daySchedule.day().toLowerCase() : "";
+        List<ScheduledTalk> rawTalks = daySchedule.talks() != null ? new ArrayList<>(daySchedule.talks()) : new ArrayList<>();
+
+        // 1. Sort raw talks chronologically
+        rawTalks.sort(Comparator.comparing(t -> normalizeTime(t.startTime())));
+
+        // 2. Eliminate overlapping talks (keep first, discard any overlapping talk)
+        List<ScheduledTalk> deconflicted = new ArrayList<>();
+        for (ScheduledTalk talk : rawTalks) {
+            if (talk == null || talk.startTime() == null || talk.endTime() == null) continue;
+            boolean conflicts = false;
+            for (ScheduledTalk accepted : deconflicted) {
+                if (hasOverlap(talk.startTime(), talk.endTime(), accepted.startTime(), accepted.endTime())) {
+                    conflicts = true;
+                    LOG.warn("Schedule conflict detected on {}: talk '{}' ({}-{}) overlaps with '{}' ({}-{}). Discarding duplicate.",
+                        dayName, talk.title(), talk.startTime(), talk.endTime(),
+                        accepted.title(), accepted.startTime(), accepted.endTime());
+                    break;
+                }
+            }
+            if (!conflicts) {
+                deconflicted.add(talk);
+            }
+        }
+
+        // 3. Backfill if talk count is below target minimum
+        int targetMin = switch (dayName) {
+            case "wednesday", "thursday" -> 5;
+            case "monday", "tuesday" -> 3;
+            case "friday" -> 3;
+            default -> 3;
+        };
+
+        if (deconflicted.size() < targetMin) {
+            List<ConferenceTalk> candidates = new ArrayList<>(conferenceService.searchTalks(query, dayName, 30));
+            if (candidates.size() < 10) {
+                for (ConferenceTalk top : conferenceService.getTalksByDay(dayName)) {
+                    if (candidates.stream().noneMatch(c -> c.id() == top.id())) {
+                        candidates.add(top);
+                    }
+                }
+            }
+
+            for (ConferenceTalk candidate : candidates) {
+                if (deconflicted.size() >= targetMin) {
+                    break;
+                }
+                if (candidate.startTime() == null || candidate.endTime() == null) continue;
+                boolean alreadyScheduled = deconflicted.stream().anyMatch(st -> st.talkId() == candidate.id());
+                if (alreadyScheduled) continue;
+
+                boolean overlaps = deconflicted.stream().anyMatch(st ->
+                    hasOverlap(candidate.startTime(), candidate.endTime(), st.startTime(), st.endTime())
+                );
+                if (!overlaps) {
+                    LOG.info("Backfilling open slot {}-{} on {} with talk '{}' (ID: {})",
+                        candidate.startTime(), candidate.endTime(), dayName, candidate.title(), candidate.id());
+                    deconflicted.add(new ScheduledTalk(
+                        candidate.id(),
+                        dayName,
+                        candidate.date(),
+                        candidate.startTime(),
+                        candidate.endTime(),
+                        candidate.room(),
+                        candidate.title(),
+                        candidate.speakersSummary(),
+                        candidate.track(),
+                        candidate.sessionType(),
+                        "Recommended session fitting your schedule and matching your interest in " + query + ".",
+                        candidate.talkAbstract()
+                    ));
+                }
+            }
+        }
+
+        // Re-sort chronologically
+        deconflicted.sort(Comparator.comparing(t -> normalizeTime(t.startTime())));
+        return new DaySchedule(daySchedule.day(), daySchedule.date(), daySchedule.dayLabel(), deconflicted);
+    }
+
+    private static String normalizeTime(String time) {
+        if (time == null) return "00:00";
+        String t = time.trim();
+        if (t.matches("^\\d:\\d{2}$")) return "0" + t;
+        return t;
+    }
+
+    private static boolean hasOverlap(String start1, String end1, String start2, String end2) {
+        String s1 = normalizeTime(start1);
+        String e1 = normalizeTime(end1);
+        String s2 = normalizeTime(start2);
+        String e2 = normalizeTime(end2);
+        return s1.compareTo(e2) < 0 && s2.compareTo(e1) < 0;
     }
 }

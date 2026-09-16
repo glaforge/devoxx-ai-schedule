@@ -1,6 +1,6 @@
 # Devoxx Belgium 2026 AI Schedule Curator (`dvxaisched`)
 
-A modern Java 25 & Micronaut application that leverages **LangChain4j's Agentic Framework** and Google's **Gemini 3.8 Flash** (`gemini-3.8-flash`) to generate personalized, conflict-free, 5-day conference schedules for [Devoxx Belgium 2026](https://devoxx.be) (October 5–9, 2026 at Kinepolis Antwerp).
+A modern Java 25 & Micronaut application that leverages **LangChain4j's Agentic Framework** and Google's **Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`) to generate personalized, conflict-free, 5-day conference schedules for [Devoxx Belgium 2026](https://devoxx.be) (October 5–9, 2026 at Kinepolis Antwerp).
 
 ---
 
@@ -23,7 +23,7 @@ flowchart TD
         
         Partition --> ParallelMapper["ParallelScheduleBuilderWorkflow<br/>@ParallelMapperAgent on Virtual Threads"]
         
-        subgraph Parallel_Workers ["5 Concurrent Gemini 3.8 Flash Workers"]
+        subgraph Parallel_Workers ["5 Concurrent Gemini 3.5 Flash-Lite Workers"]
             ParallelMapper --> DayMon["Day 1: Monday Optimizer"]
             ParallelMapper --> DayTue["Day 2: Tuesday Optimizer"]
             ParallelMapper --> DayWed["Day 3: Wednesday Optimizer"]
@@ -58,11 +58,11 @@ flowchart TD
 ### 3. Agent 2: Parallel Day Mapper (`ParallelScheduleBuilderWorkflow`)
 - **Role:** Concurrently synthesizes conflict-free daily agendas.
 - **Parallel Mapper:** Uses LangChain4j's `@ParallelMapperAgent` mapped across **Java 25 virtual threads** (`Executors.newVirtualThreadPerTaskExecutor()`).
-- **Sub-Agent (`DayScheduleBuilderAgent`):** 5 concurrent Gemini 3.8 Flash workers each curate a single conference day:
+- **Sub-Agent (`DayScheduleBuilderAgent`):** 5 concurrent Gemini 3.5 Flash-Lite workers each curate a single conference day:
   - Selects 3 to 6 top sessions matching attendee interests.
   - Strictly enforces no overlapping time slots.
   - Generates personalized curation rationales for each session.
-- **Performance Impact:** Reduces end-to-end synthesis time from ~45–60 seconds down to ~10–15 seconds by processing all 5 days simultaneously.
+- **Performance Impact:** Reduces end-to-end synthesis time down to ~3–5 seconds by processing all 5 days simultaneously.
 
 ### 4. Resilient Error Handling (`errorHandler`)
 - Configured with LangChain4j's native **`errorHandler`** on the parallel mapper builder.
@@ -84,7 +84,7 @@ flowchart TD
 - **Runtime & Language:** Java 25 (OpenJDK 25) with virtual threads
 - **Backend Framework:** Micronaut 5.1.5 (Netty HTTP server, Serde JSON, Project Reactor)
 - **Agentic AI:** LangChain4j `1.20.0-beta30` (`langchain4j-agentic`, `langchain4j-google-genai`)
-- **LLM:** Google Gemini 3.8 Flash (`gemini-3.8-flash`)
+- **LLM:** Google Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)
 - **Cloud Infrastructure:** Google Cloud Run (Serverless build-less container execution) & Google Secret Manager
 - **Automation:** Gradle 9.6 + `just` task runner
 

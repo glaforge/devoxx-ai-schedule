@@ -34,7 +34,7 @@ public class LangChain4jConfig {
     @Singleton
     public ChatModel chatModel(
         @Value("${gemini.api-key:}") String apiKey,
-        @Value("${gemini.model:gemini-3.8-flash}") String modelName
+        @Value("${gemini.model:gemini-3.5-flash-lite}") String modelName
     ) {
         String effectiveApiKey = System.getenv("GEMINI_API_KEY");
         if (effectiveApiKey == null || effectiveApiKey.isBlank()) {
@@ -43,7 +43,7 @@ public class LangChain4jConfig {
         if (effectiveApiKey != null) {
             effectiveApiKey = effectiveApiKey.trim();
             while (effectiveApiKey.endsWith("}")) {
-                effectiveApiKey = effectiveApiKey.substring(0, effectiveApiKey.length() - 1).trim();
+                effectiveApiKey = effectiveApiKey.substring(0, effectiveApiKey.length() - 1);
             }
         }
 
@@ -58,7 +58,7 @@ public class LangChain4jConfig {
 
         return GoogleGenAiChatModel.builder()
             .apiKey(effectiveApiKey)
-            .modelName(modelName != null && !modelName.isBlank() ? modelName : "gemini-3.8-flash")
+            .modelName(modelName != null && !modelName.isBlank() ? modelName : "gemini-3.5-flash-lite")
             .temperature(0.2)
             .timeout(Duration.ofSeconds(120))
             .logRequests(false)
