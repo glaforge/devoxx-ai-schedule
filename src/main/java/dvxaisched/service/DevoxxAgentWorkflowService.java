@@ -12,16 +12,22 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dev.langchain4j.agentic.observability.AfterAgentToolExecution;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentRequest;
 import dev.langchain4j.agentic.observability.AgentResponse;
 import dev.langchain4j.agentic.observability.BeforeAgentToolExecution;
+import dvxaisched.agent.DayScheduleBuilderAgent;
+import dvxaisched.agent.ParallelScheduleBuilderWorkflow;
+import dvxaisched.model.DayPlanRequest;
+import dvxaisched.model.DaySchedule;
 import dvxaisched.model.WorkflowProgressEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Singleton
@@ -34,6 +40,8 @@ public class DevoxxAgentWorkflowService {
     private final DevoxxConferenceTools conferenceTools;
 
     private final InterestValidatorAgent validatorAgent;
+    private final DayScheduleBuilderAgent dayScheduleAgent;
+    private final ParallelScheduleBuilderWorkflow parallelScheduleWorkflow;
     private final ScheduleBuilderAgent scheduleBuilderAgent;
 
     public DevoxxAgentWorkflowService(
@@ -45,26 +53,33 @@ public class DevoxxAgentWorkflowService {
         this.conferenceService = conferenceService;
         this.conferenceTools = conferenceTools;
 
-        LOG.info("Initializing LangChain4j Agentic System with 2-agent sequence...");
+        LOG.info("Initializing LangChain4j Agentic System with Parallel Mapper workflow...");
 
         AgentListener agentObservabilityListener = new AgentListener() {
             @Override
             public void beforeAgentInvocation(AgentRequest request) {
-                LOG.info("[AgentListener.beforeAgentInvocation] Agent '{}' starting", request.agentName());
+                String agentName = request.agentName() != null ? request.agentName() : "";
+                LOG.info("[AgentListener.beforeAgentInvocation] Agent '{}' starting", agentName);
                 @SuppressWarnings("unchecked")
                 Consumer<WorkflowProgressEvent> progress = request.agenticScope().executionContextAs(Consumer.class);
                 if (progress != null) {
-                    if (request.agentName().toLowerCase().contains("validator") || request.agentName().equals("validate")) {
+                    if (agentName.toLowerCase().contains("validator") || agentName.equals("validate")) {
                         progress.accept(WorkflowProgressEvent.of(
                             "agent1_start",
                             "Agent 1: Guardrail Validator",
                             "Evaluating prompt safety, prompt injection defenses, and technical relevance..."
                         ));
+                    } else if (agentName.toLowerCase().contains("parallel") || agentName.toLowerCase().contains("day")) {
+                        progress.accept(WorkflowProgressEvent.of(
+                            "agent2_start",
+                            "Parallel Day Optimizers",
+                            "Dispatching 5 parallel Gemini workers to synthesize Mon–Fri concurrently..."
+                        ));
                     } else {
                         progress.accept(WorkflowProgressEvent.of(
                             "agent2_start",
                             "Agent 2: Schedule Optimizer",
-                            "Curating conflict-free 5-day timetable with Gemini 3.8 Flash..."
+                            "Curating conflict-free conference timetable with Gemini 3.8 Flash..."
                         ));
                     }
                 }
@@ -72,11 +87,12 @@ public class DevoxxAgentWorkflowService {
 
             @Override
             public void afterAgentInvocation(AgentResponse response) {
-                LOG.info("[AgentListener.afterAgentInvocation] Agent '{}' finished", response.agentName());
+                String agentName = response.agentName() != null ? response.agentName() : "";
+                LOG.info("[AgentListener.afterAgentInvocation] Agent '{}' finished", agentName);
                 @SuppressWarnings("unchecked")
                 Consumer<WorkflowProgressEvent> progress = response.agenticScope().executionContextAs(Consumer.class);
                 if (progress != null) {
-                    if (response.agentName().toLowerCase().contains("validator") || response.agentName().equals("validate")) {
+                    if (agentName.toLowerCase().contains("validator") || agentName.equals("validate")) {
                         if (response.output() instanceof ValidationResult vr && vr.valid()) {
                             progress.accept(WorkflowProgressEvent.of(
                                 "agent1_done",
@@ -84,11 +100,17 @@ public class DevoxxAgentWorkflowService {
                                 "Input validated successfully! Topics: " + (vr.sanitizedInterests() != null ? vr.sanitizedInterests() : "")
                             ));
                         }
+                    } else if (agentName.toLowerCase().contains("day") || agentName.contains("_")) {
+                        progress.accept(WorkflowProgressEvent.of(
+                            "agent2_progress",
+                            "Parallel Day Optimizer",
+                            "Curated day schedule concurrently"
+                        ));
                     } else {
                         progress.accept(WorkflowProgressEvent.of(
                             "agent2_done",
                             "Agent 2: Schedule Optimizer",
-                            "5-day conference timetable curated successfully!"
+                            "Conference timetable curated successfully!"
                         ));
                     }
                 }
@@ -112,6 +134,20 @@ public class DevoxxAgentWorkflowService {
             }
 
             @Override
+            public void afterAgentToolExecution(AfterAgentToolExecution tool) {
+                LOG.info("[AgentListener.afterAgentToolExecution] Tool finished");
+                @SuppressWarnings("unchecked")
+                Consumer<WorkflowProgressEvent> progress = tool.agenticScope().executionContextAs(Consumer.class);
+                if (progress != null) {
+                    progress.accept(WorkflowProgressEvent.of(
+                        "agent2_start",
+                        "Agent 2: Schedule Optimizer",
+                        "Catalog search completed. Synthesizing schedule..."
+                    ));
+                }
+            }
+
+            @Override
             public boolean inheritedBySubagents() {
                 return true;
             }
@@ -124,7 +160,22 @@ public class DevoxxAgentWorkflowService {
             .listener(agentObservabilityListener)
             .build();
 
-        // Agent 2: Conference Schedule Builder Agent (equipped with conference tools)
+        // Sub-agent: Single Day Schedule Builder
+        this.dayScheduleAgent = AgenticServices.agentBuilder(DayScheduleBuilderAgent.class)
+            .chatModel(chatModel)
+            .outputKey("daySchedule")
+            .listener(agentObservabilityListener)
+            .build();
+
+        // Parallel Mapper: 5 concurrent day workers executed via virtual threads
+        this.parallelScheduleWorkflow = AgenticServices.parallelMapperBuilder(ParallelScheduleBuilderWorkflow.class)
+            .subAgents(List.of(dayScheduleAgent))
+            .itemsProvider("dayRequests")
+            .executor(Executors.newVirtualThreadPerTaskExecutor())
+            .listener(agentObservabilityListener)
+            .build();
+
+        // Agent 2 Fallback: Monolithic Conference Schedule Builder Agent (equipped with tools)
         this.scheduleBuilderAgent = AgenticServices.agentBuilder(ScheduleBuilderAgent.class)
             .chatModel(chatModel)
             .outputKey("schedule")
@@ -132,8 +183,9 @@ public class DevoxxAgentWorkflowService {
             .listener(agentObservabilityListener)
             .build();
 
-        LOG.info("LangChain4j 2-agent system initialized successfully with observability listener.");
+        LOG.info("LangChain4j Parallel Mapper Agentic System initialized with virtual thread executor.");
     }
+
 
     /**
      * Executes the 2-agent sequence without streaming callback.
@@ -215,36 +267,54 @@ public class DevoxxAgentWorkflowService {
                 ));
             }
 
-            // Step 2: Query candidate talks for the validated interests
+            // Step 2: Query candidate talks and partition into 5 conference days
             String query = (validation.sanitizedInterests() != null && !validation.sanitizedInterests().isBlank())
                 ? validation.sanitizedInterests()
                 : rawInput;
 
-            LOG.info("Step 2 [Agent 2 - Schedule Builder]: Building schedule for query '{}'", query);
+            LOG.info("Step 2 [Parallel Mapper]: Partitioning catalog into 5 days for query '{}'", query);
             if (progressConsumer != null) {
                 progressConsumer.accept(WorkflowProgressEvent.of(
                     "indexing",
                     "Devoxx Catalog Indexer",
-                    "Searching 201 Devoxx Belgium 2026 sessions for candidate talks..."
+                    "Partitioning candidate sessions across all 5 conference days..."
                 ));
             }
 
-            List<ConferenceTalk> matched = new ArrayList<>(conferenceService.searchTalks(query, null, 35));
-            if (matched.size() < 15) {
-                for (ConferenceTalk top : conferenceService.getTopTalks(20)) {
-                    if (matched.stream().noneMatch(t -> t.id() == top.id())) {
-                        matched.add(top);
+            String[] dayNames = {"monday", "tuesday", "wednesday", "thursday", "friday"};
+            String[] dates = {"2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"};
+            String[] labels = {
+                "Monday, Oct 5 (Deep Dives & Labs)",
+                "Tuesday, Oct 6 (Deep Dives & Labs)",
+                "Wednesday, Oct 7 (Keynotes & Conference)",
+                "Thursday, Oct 8 (Conference)",
+                "Friday, Oct 9 (Conference - Half Day)"
+            };
+
+            List<DayPlanRequest> dayRequests = new ArrayList<>();
+            List<ConferenceTalk> allCandidateTalks = new ArrayList<>();
+
+            for (int i = 0; i < dayNames.length; i++) {
+                String day = dayNames[i];
+                List<ConferenceTalk> dayMatches = new ArrayList<>(conferenceService.searchTalks(query, day, 15));
+                if (dayMatches.size() < 6) {
+                    for (ConferenceTalk top : conferenceService.getTalksByDay(day)) {
+                        if (dayMatches.stream().noneMatch(t -> t.id() == top.id())) {
+                            dayMatches.add(top);
+                        }
+                        if (dayMatches.size() >= 12) break;
                     }
                 }
+                allCandidateTalks.addAll(dayMatches);
+                String dayPrompt = conferenceService.formatTalksForPrompt(dayMatches);
+                dayRequests.add(new DayPlanRequest(day, dates[i], labels[i], query, dayPrompt));
             }
-
-            String candidatePrompt = conferenceService.formatTalksForPrompt(matched);
 
             if (progressConsumer != null) {
                 progressConsumer.accept(WorkflowProgressEvent.of(
                     "agent2_start",
-                    "Agent 2: Schedule Optimizer",
-                    "Synthesizing personalized, conflict-free 5-day agenda with Gemini 3.8 Flash..."
+                    "Parallel Day Optimizers",
+                    "Dispatching 5 parallel Gemini workers to synthesize Mon–Fri concurrently..."
                 ));
             }
 
@@ -252,24 +322,48 @@ public class DevoxxAgentWorkflowService {
             ScheduleResponse finalResponse = null;
 
             try {
-                ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
-                if (response != null && response.days() != null && !response.days().isEmpty() &&
-                    response.days().stream().anyMatch(d -> d.talks() != null && !d.talks().isEmpty())) {
-                    List<dvxaisched.model.DaySchedule> enrichedDays = enrichDaysWithAbstracts(response.days());
+                LOG.info("Invoking ParallelScheduleBuilderWorkflow across 5 virtual threads");
+                List<DaySchedule> rawDays = parallelScheduleWorkflow.scheduleDays(dayRequests);
+                if (rawDays != null && !rawDays.isEmpty() &&
+                    rawDays.stream().anyMatch(d -> d != null && d.talks() != null && !d.talks().isEmpty())) {
+                    List<DaySchedule> enrichedDays = enrichDaysWithAbstracts(rawDays);
                     finalResponse = new ScheduleResponse(
                         true,
                         null,
-                        response.theme() != null ? response.theme() : query,
-                        response.overview(),
+                        "Devoxx Belgium 2026: " + query,
+                        "AI-curated conflict-free 5-day conference agenda tailored to your focus on " + query + ".",
                         enrichedDays
                     );
+                    LOG.info("Parallel mapper completed successfully with {} days", enrichedDays.size());
                 }
             } catch (Exception e) {
-                LOG.error("Error executing ScheduleBuilderAgent", e);
+                LOG.error("ParallelScheduleBuilderWorkflow failed, trying fallback", e);
+            }
+
+            // Fallback to monolithic ScheduleBuilderAgent if parallel mapper produced empty/failed response
+            if (finalResponse == null) {
+                try {
+                    LOG.warn("Falling back to monolithic ScheduleBuilderAgent");
+                    String candidatePrompt = conferenceService.formatTalksForPrompt(allCandidateTalks.stream().distinct().toList());
+                    ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
+                    if (response != null && response.days() != null && !response.days().isEmpty() &&
+                        response.days().stream().anyMatch(d -> d != null && d.talks() != null && !d.talks().isEmpty())) {
+                        List<DaySchedule> enrichedDays = enrichDaysWithAbstracts(response.days());
+                        finalResponse = new ScheduleResponse(
+                            true,
+                            null,
+                            response.theme() != null ? response.theme() : query,
+                            response.overview(),
+                            enrichedDays
+                        );
+                    }
+                } catch (Exception e) {
+                    LOG.error("Error executing ScheduleBuilderAgent fallback", e);
+                }
             }
 
             if (finalResponse == null) {
-                finalResponse = buildFallbackSchedule(query, matched);
+                finalResponse = buildFallbackSchedule(query, allCandidateTalks);
             }
 
             long a2Duration = System.currentTimeMillis() - a2StartTime;

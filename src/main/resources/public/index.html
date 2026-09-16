@@ -572,6 +572,12 @@
             }
             break;
 
+          case 'agent2_progress':
+            if (activeStep === 3) {
+              agent2Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary" data-icon="progress_activity">progress_activity</span><span class="text-primary">${escapeHtml(data.message || 'Optimizing days in parallel...')}</span>`;
+            }
+            break;
+
           case 'agent2_done':
             const a2Sec = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : agent2Timer.textContent;
             setStepComplete('agent2', a2Sec, 'Conflict-free agenda curated');
