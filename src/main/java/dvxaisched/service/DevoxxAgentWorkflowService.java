@@ -1,6 +1,8 @@
 package dvxaisched.service;
 
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.agent.ErrorContext;
+import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.observability.AfterAgentToolExecution;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentRequest;
@@ -176,6 +178,32 @@ public class DevoxxAgentWorkflowService {
             .itemsProvider("dayRequests")
             .executor(Executors.newVirtualThreadPerTaskExecutor())
             .listener(agentObservabilityListener)
+            .errorHandler(errorContext -> {
+                String agentName = errorContext.agentName() != null ? errorContext.agentName() : "dayAgent";
+                String exMsg = errorContext.exception() != null ? errorContext.exception().getMessage() : "unknown error";
+
+                String retryKey = "retry_count_" + agentName;
+                Integer retryCount = errorContext.agenticScope().readState(retryKey, 0);
+                if (retryCount < 2) {
+                    errorContext.agenticScope().writeState(retryKey, retryCount + 1);
+                    LOG.warn("Error in agent '{}' (attempt {} of 2): {}. Retrying via LangChain4j errorHandler...",
+                        agentName, retryCount + 1, exMsg);
+
+                    @SuppressWarnings("unchecked")
+                    Consumer<WorkflowProgressEvent> progress = errorContext.agenticScope().executionContextAs(Consumer.class);
+                    if (progress != null) {
+                        progress.accept(WorkflowProgressEvent.of(
+                            "agent2_progress",
+                            "Parallel Day Optimizer",
+                            "Transient issue on day worker (" + agentName + "). Retrying (attempt " + (retryCount + 1) + ")..."
+                        ));
+                    }
+                    return ErrorRecoveryResult.retry();
+                }
+
+                LOG.error("Agent '{}' exceeded max retries: {}", agentName, exMsg);
+                return ErrorRecoveryResult.throwException();
+            })
             .build();
 
         // Agent 2 Fallback: Monolithic Conference Schedule Builder Agent (equipped with tools)
