@@ -590,6 +590,8 @@
       setStepActive('agent1', 'Analyzing prompt safety & relevance...');
       statusMessage.textContent = 'Agent 1: Guardrail Validator initializing...';
 
+      let streamFinished = false;
+
       // Connect to SSE stream
       const streamUrl = `/api/schedule/stream?interests=${encodeURIComponent(interests)}`;
       const eventSource = new EventSource(streamUrl);
@@ -604,6 +606,8 @@
       };
 
       eventSource.onerror = (err) => {
+        if (streamFinished) return;
+        streamFinished = true;
         console.error("SSE connection error:", err);
         eventSource.close();
         clearInterval(timerInterval);
@@ -663,6 +667,7 @@
             break;
 
           case 'complete':
+            streamFinished = true;
             clearInterval(timerInterval);
             eventSource.close();
             submitBtn.disabled = false;
@@ -676,6 +681,7 @@
             break;
 
           case 'rejected':
+            streamFinished = true;
             clearInterval(timerInterval);
             eventSource.close();
             submitBtn.disabled = false;
