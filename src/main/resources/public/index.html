@@ -703,7 +703,6 @@
 
           const trackBadge = getTrackBadge(talk.track);
           const typeBadge = getSessionTypeBadge(talk.sessionType);
-          const isBookmarked = isTalkBookmarked(talk.talkId);
 
           card.innerHTML = `
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -759,12 +758,6 @@
 
             <div class="flex items-center justify-between pt-2 border-t border-white/5">
               <div class="flex items-center gap-2">
-                <button type="button" class="bookmark-btn px-3 py-1.5 rounded-lg ${isBookmarked ? 'bg-primary-container/20 border border-primary/40 text-primary' : 'bg-surface-container hover:bg-surface-container-high border border-white/10 text-on-surface-variant hover:text-white'} text-xs font-mono transition flex items-center gap-1.5"
-                  data-saved="${isBookmarked ? 'true' : 'false'}"
-                  onclick="toggleBookmark(this, ${talk.talkId})">
-                  <span class="material-symbols-outlined text-[16px] ${isBookmarked ? 'text-primary' : ''}" data-icon="${isBookmarked ? 'bookmark_added' : 'bookmark_add'}">${isBookmarked ? 'bookmark_added' : 'bookmark_add'}</span>
-                  <span>${isBookmarked ? 'Saved' : 'Bookmark'}</span>
-                </button>
                 <button type="button" id="abstract-btn-${talk.talkId}" class="abstract-toggle-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
                   onclick="toggleAbstract(${talk.talkId}, this)">
                   <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
@@ -783,33 +776,6 @@
         daySection.appendChild(talksList);
         agendaCardsContainer.appendChild(daySection);
       });
-    }
-
-    const bookmarkedTalkIds = new Set(JSON.parse(localStorage.getItem('dvx_bookmarks') || '[]'));
-
-    function isTalkBookmarked(talkId) {
-      return bookmarkedTalkIds.has(Number(talkId));
-    }
-
-    function toggleBookmark(btn, talkId) {
-      const id = Number(talkId);
-      const isSaved = bookmarkedTalkIds.has(id);
-      if (isSaved) {
-        bookmarkedTalkIds.delete(id);
-        btn.setAttribute('data-saved', 'false');
-        btn.className = "bookmark-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5";
-        btn.innerHTML = `<span class="material-symbols-outlined text-[16px]" data-icon="bookmark_add">bookmark_add</span><span>Bookmark</span>`;
-      } else {
-        bookmarkedTalkIds.add(id);
-        btn.setAttribute('data-saved', 'true');
-        btn.className = "bookmark-btn px-3 py-1.5 rounded-lg bg-primary-container/20 border border-primary/40 text-xs font-mono text-primary transition flex items-center gap-1.5";
-        btn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-primary" data-icon="bookmark_added">bookmark_added</span><span>Saved</span>`;
-      }
-      try {
-        localStorage.setItem('dvx_bookmarks', JSON.stringify(Array.from(bookmarkedTalkIds)));
-      } catch (e) {
-        console.warn('Failed to save bookmark in localStorage', e);
-      }
     }
 
     async function toggleAbstract(talkId, btn) {
