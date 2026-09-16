@@ -5,7 +5,7 @@ WORKDIR /workspace
 # Copy Gradle wrapper and build configuration
 COPY gradlew /workspace/
 COPY gradle /workspace/gradle
-COPY settings.gradle build.gradle /workspace/
+COPY settings.gradle build.gradle gradle.properties /workspace/
 
 # Copy source code and resources
 COPY src /workspace/src
