@@ -34,8 +34,28 @@ public record ConferenceTalk(
     String track,
     String sessionType,
     int totalFavourites,
-    List<SpeakerInfo> speakers
+    List<SpeakerInfo> speakers,
+    @Nullable String url
 ) {
+    public ConferenceTalk(
+        long id,
+        String day,
+        String date,
+        String startTime,
+        String endTime,
+        String room,
+        String title,
+        String summary,
+        @Nullable String description,
+        String track,
+        String sessionType,
+        int totalFavourites,
+        List<SpeakerInfo> speakers
+    ) {
+        this(id, day, date, startTime, endTime, room, title, summary, description, track, sessionType, totalFavourites, speakers,
+            buildDevoxxTalkUrl("dvbe26", id, title));
+    }
+
     public ConferenceTalk(
         long id,
         String day,
@@ -50,7 +70,21 @@ public record ConferenceTalk(
         int totalFavourites,
         List<SpeakerInfo> speakers
     ) {
-        this(id, day, date, startTime, endTime, room, title, summary, null, track, sessionType, totalFavourites, speakers);
+        this(id, day, date, startTime, endTime, room, title, summary, null, track, sessionType, totalFavourites, speakers,
+            buildDevoxxTalkUrl("dvbe26", id, title));
+    }
+
+    public static String buildDevoxxTalkUrl(String eventSlug, long talkId, String title) {
+        String slug = eventSlug != null && !eventSlug.isBlank() ? eventSlug : "dvbe26";
+        if (title == null || title.isBlank()) {
+            return "https://m.devoxx.com/events/" + slug + "/talks/" + talkId;
+        }
+        String cleanTitle = title.toLowerCase()
+            .replaceAll("[^a-z0-9]+", "-")
+            .replaceAll("^-+|-+$", "");
+        return cleanTitle.isBlank()
+            ? "https://m.devoxx.com/events/" + slug + "/talks/" + talkId
+            : "https://m.devoxx.com/events/" + slug + "/talks/" + talkId + "/" + cleanTitle;
     }
 
     public String talkAbstract() {

@@ -143,6 +143,10 @@ tasks.register("fetchSchedule") {
                         ]
                     }
 
+                    def talkTitle = (talk.title ?: slot.proposal.title ?: "").trim()
+                    def titleSlug = talkTitle.toLowerCase().replaceAll(/[^a-z0-9]+/, '-').replaceAll(/^-+|-+$/, '')
+                    def talkUrl = "https://m.devoxx.com/events/${slug}/talks/${talkId}" + (titleSlug ? "/${titleSlug}" : "")
+
                     scheduledTalks << [
                         id: talkId,
                         day: day.toLowerCase(),
@@ -150,13 +154,14 @@ tasks.register("fetchSchedule") {
                         startTime: startZdt.toLocalTime().format(timeFormatter),
                         endTime: endZdt.toLocalTime().format(timeFormatter),
                         room: slot.room?.name ?: "TBA",
-                        title: talk.title ?: slot.proposal.title,
+                        title: talkTitle,
                         summary: talk.summary ?: slot.proposal.summary ?: "",
                         track: talk.track?.name ?: slot.track?.name ?: "",
                         sessionType: talk.sessionType?.name ?: slot.sessionType?.name ?: "",
                         totalFavourites: (talk.totalFavourites ?: slot.totalFavourites ?: 0) as int,
                         speakers: speakers,
-                        description: talk.description ?: ""
+                        description: talk.description ?: "",
+                        url: talkUrl
                     ]
                     dayCount++
                 }

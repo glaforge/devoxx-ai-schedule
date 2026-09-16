@@ -32,8 +32,27 @@ public record ScheduledTalk(
     String track,
     String sessionType,
     String reason,
-    @Nullable String talkAbstract
+    @Nullable String talkAbstract,
+    @Nullable String url
 ) {
+    public ScheduledTalk(
+        long talkId,
+        String day,
+        String date,
+        String startTime,
+        String endTime,
+        String room,
+        String title,
+        String speakers,
+        String track,
+        String sessionType,
+        String reason,
+        @Nullable String talkAbstract
+    ) {
+        this(talkId, day, date, startTime, endTime, room, title, speakers, track, sessionType, reason, talkAbstract,
+            ConferenceTalk.buildDevoxxTalkUrl("dvbe26", talkId, title));
+    }
+
     public ScheduledTalk(
         long talkId,
         String day,
@@ -47,6 +66,7 @@ public record ScheduledTalk(
         String sessionType,
         String reason
     ) {
-        this(talkId, day, date, startTime, endTime, room, title, speakers, track, sessionType, reason, null);
+        this(talkId, day, date, startTime, endTime, room, title, speakers, track, sessionType, reason, null,
+            ConferenceTalk.buildDevoxxTalkUrl("dvbe26", talkId, title));
     }
 }

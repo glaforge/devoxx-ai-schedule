@@ -787,6 +787,7 @@
 
           const trackBadge = getTrackBadge(talk.track);
           const typeBadge = getSessionTypeBadge(talk.sessionType);
+          const talkUrl = talk.url || (talk.talkId ? `https://m.devoxx.com/events/dvbe26/talks/${talk.talkId}` : null);
 
           card.innerHTML = `
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -809,7 +810,14 @@
 
             <div class="space-y-1">
               <h3 class="text-base sm:text-lg font-bold text-white leading-snug tracking-tight">
-                ${escapeHtml(talk.title)}
+                ${talkUrl ? `
+                  <a href="${escapeHtml(talkUrl)}" target="_blank" rel="noopener noreferrer"
+                     class="hover:text-primary transition inline-flex items-center gap-1.5 group"
+                     title="Open session on Devoxx Companion">
+                    <span>${escapeHtml(talk.title)}</span>
+                    <span class="material-symbols-outlined text-[15px] text-primary/70 group-hover:text-primary group-hover:translate-x-0.5 transition" data-icon="open_in_new">open_in_new</span>
+                  </a>
+                ` : escapeHtml(talk.title)}
               </h3>
               <p class="text-xs sm:text-sm text-on-surface-variant flex items-center gap-2">
                 <span class="material-symbols-outlined text-[16px] text-tertiary shrink-0" data-icon="person">person</span>
@@ -840,12 +848,20 @@
               </div>
             </div>
 
-            <div class="flex items-center pt-2 border-t border-white/5">
+            <div class="flex items-center justify-between pt-2 border-t border-white/5">
               <button type="button" id="abstract-btn-${talk.talkId}" class="abstract-toggle-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
                 onclick="toggleAbstract(${talk.talkId}, this)">
                 <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
                 <span>Abstract</span>
               </button>
+              ${talkUrl ? `
+                <a href="${escapeHtml(talkUrl)}" target="_blank" rel="noopener noreferrer"
+                   class="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-xs font-mono text-primary hover:text-white transition flex items-center gap-1.5"
+                   title="View on Devoxx Mobile Companion">
+                  <span>View on Devoxx</span>
+                  <span class="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
+                </a>
+              ` : ''}
             </div>
           `;
           talksList.appendChild(card);

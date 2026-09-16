@@ -460,6 +460,16 @@ public class DevoxxAgentWorkflowService {
                                 .orElse(talk.talkAbstract() != null ? talk.talkAbstract() : "");
                         });
 
+                    String realUrl = conferenceService.getTalkById(talk.talkId())
+                        .map(ConferenceTalk::url)
+                        .filter(u -> u != null && !u.isBlank())
+                        .orElseGet(() -> {
+                            if (talk.url() != null && talk.url().startsWith("https://m.devoxx.com/")) {
+                                return talk.url();
+                            }
+                            return ConferenceTalk.buildDevoxxTalkUrl("dvbe26", talk.talkId(), talk.title());
+                        });
+
                     enrichedTalks.add(new ScheduledTalk(
                         talk.talkId(),
                         talk.day(),
@@ -472,7 +482,8 @@ public class DevoxxAgentWorkflowService {
                         talk.track(),
                         talk.sessionType(),
                         talk.reason(),
-                        realAbstract
+                        realAbstract,
+                        realUrl
                     ));
                 }
             }
@@ -522,7 +533,8 @@ public class DevoxxAgentWorkflowService {
                     t.track(),
                     t.sessionType(),
                     "Matches your interest in " + query,
-                    t.talkAbstract()
+                    t.talkAbstract(),
+                    t.url() != null && !t.url().isBlank() ? t.url() : ConferenceTalk.buildDevoxxTalkUrl("dvbe26", t.id(), t.title())
                 ));
             }
             days.add(new DaySchedule(day, dates[i], labels[i], scheduled));
@@ -624,7 +636,8 @@ public class DevoxxAgentWorkflowService {
                         candidate.track(),
                         candidate.sessionType(),
                         "Recommended session fitting your schedule and matching your interest in " + query + ".",
-                        candidate.talkAbstract()
+                        candidate.talkAbstract(),
+                        candidate.url() != null && !candidate.url().isBlank() ? candidate.url() : ConferenceTalk.buildDevoxxTalkUrl("dvbe26", candidate.id(), candidate.title())
                     ));
                 }
             }

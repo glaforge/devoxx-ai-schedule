@@ -57,6 +57,10 @@ class ScheduleWorkflowIntegrationTest {
             .flatMap(d -> d.talks().stream())
             .anyMatch(t -> t.talkAbstract() != null && !t.talkAbstract().isBlank()),
             "Scheduled talks should have enriched abstracts");
+        assertTrue(body.days().stream()
+            .flatMap(d -> d.talks().stream())
+            .allMatch(t -> t.url() != null && t.url().startsWith("https://m.devoxx.com/events/dvbe26/talks/")),
+            "All scheduled talks should have valid m.devoxx.com URLs");
 
         for (var day : body.days()) {
             var talks = day.talks();
