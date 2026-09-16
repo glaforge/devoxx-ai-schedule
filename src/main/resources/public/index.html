@@ -171,14 +171,13 @@
         <span class="material-symbols-outlined text-[16px] text-secondary" data-icon="auto_awesome">auto_awesome</span>
         <span>Autonomous Multi-Agent Conference Engine</span>
         <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-        <span class="opacity-80">Gemini 3.8 Flash</span>
+        <span class="text-label-caps font-mono opacity-80">v3.8.4</span>
       </div>
-      <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-        Craft Your Personal <br class="hidden sm:inline"/>
-        <span class="gradient-title">Devoxx Belgium 2026</span> Schedule
+      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+        Personalized Devoxx 2026 Schedule
       </h1>
       <p class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-        Describe your tech stack, goals, or topics of interest. Our two-agent AI system validates your prompt for safety, queries 201 conference sessions, and synthesizes a conflict-free personalized agenda.
+        AI-orchestrated itinerary matching your technical focus and transit preferences.
       </p>
     </section>
 
@@ -188,16 +187,12 @@
         <!-- Subtle Top Specular Lighting Flare -->
         <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-primary/20 blur-3xl rounded-full pointer-events-none"></div>
 
-        <form id="scheduleForm" class="space-y-5">
+        <form id="scheduleForm" class="space-y-4">
           <div class="flex items-center justify-between">
             <label for="interestsInput" class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
               <span class="material-symbols-outlined text-primary text-[16px]" data-icon="terminal">terminal</span>
               Natural Language Conference Agent Prompt
             </label>
-            <div class="flex items-center gap-2 text-xs font-mono text-tertiary">
-              <span class="material-symbols-outlined text-[14px]" data-icon="electric_bolt">electric_bolt</span>
-              <span>Guardrails &amp; Constraints Active</span>
-            </div>
           </div>
 
           <!-- Interactive Textarea -->
@@ -206,15 +201,13 @@
               id="interestsInput"
               rows="3"
               class="w-full bg-surface-container-lowest/90 text-on-surface font-sans text-sm rounded-xl p-4 border border-white/10 focus:border-secondary focus:ring-1 focus:ring-secondary/50 focus:outline-none transition-all placeholder:text-slate-500 leading-relaxed resize-none"
-              placeholder="e.g. I am interested in AI agents, LangChain4j, Loop Engineering, and modern Java virtual threads..."
+              placeholder="I am a senior Java architect focusing on autonomous AI agents, Loom virtual thread throughput in production, and enterprise LLM security guardrails..."
               required
             ></textarea>
           </div>
 
           <!-- Quick Context Expansion Pills -->
-          <div class="space-y-2">
-            <span class="text-xs font-mono text-on-surface-variant">Quick Injection Tokens:</span>
-            <div class="flex flex-wrap gap-2 pt-1" id="promptChips">
+          <div class="flex flex-wrap gap-2 pt-1" id="promptChips">
               <button type="button" class="chip-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container/20 border border-primary/40 text-primary font-mono text-xs hover:bg-primary-container/30 transition-colors"
                 data-prompt="I'm interested in AI agents, Generative AI, LLM evaluation, LangChain4j, and loop engineering.">
                 <span>🤖</span> + AI Agents &amp; GenAI
@@ -280,41 +273,50 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
         <!-- Stage 1 -->
         <div id="stepAgent1" class="glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden">
-          <div class="flex items-center justify-between mb-2.5">
+          <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
               <span id="agent1Dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
               Stage 01 • Guardrail
             </span>
             <span id="agent1Timer" class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10">--</span>
           </div>
-          <h3 class="text-sm font-bold text-white mb-1">Guardrail Validator</h3>
-          <p id="agent1Subtext" class="text-xs text-on-surface-variant">Safety, prompt sanitization &amp; injection defenses.</p>
+          <h3 class="text-sm font-bold text-white mb-2">Guardrail Validator</h3>
+          <div id="agent1Subtext" class="flex items-center gap-2 text-xs font-mono text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px] text-slate-500" data-icon="hourglass_empty">hourglass_empty</span>
+            <span>Standby</span>
+          </div>
         </div>
 
         <!-- Stage 2 -->
         <div id="stepCatalog" class="glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden">
-          <div class="flex items-center justify-between mb-2.5">
+          <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
               <span id="catalogDot" class="w-2 h-2 rounded-full bg-slate-600"></span>
               Stage 02 • Retrieval
             </span>
             <span id="catalogTimer" class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10">--</span>
           </div>
-          <h3 class="text-sm font-bold text-white mb-1">Catalog Indexer</h3>
-          <p id="catalogSubtext" class="text-xs text-on-surface-variant">Searching 201 Devoxx Belgium sessions.</p>
+          <h3 class="text-sm font-bold text-white mb-2">Catalog Indexer</h3>
+          <div id="catalogSubtext" class="flex items-center gap-2 text-xs font-mono text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px] text-slate-500" data-icon="hourglass_empty">hourglass_empty</span>
+            <span>Standby</span>
+          </div>
         </div>
 
         <!-- Stage 3 -->
         <div id="stepAgent2" class="glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden">
-          <div class="flex items-center justify-between mb-2.5">
+          <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
               <span id="agent2Dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
               Stage 03 • Synthesis
             </span>
             <span id="agent2Timer" class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10">--</span>
           </div>
-          <h3 class="text-sm font-bold text-white mb-1">Schedule Optimizer</h3>
-          <p id="agent2Subtext" class="text-xs text-on-surface-variant">Gemini 3.8 Flash conflict-free reasoning.</p>
+          <h3 class="text-sm font-bold text-white mb-2">Schedule Optimizer</h3>
+          <div id="agent2Subtext" class="flex items-center gap-2 text-xs font-mono text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px] text-slate-500" data-icon="hourglass_empty">hourglass_empty</span>
+            <span>Standby</span>
+          </div>
         </div>
       </div>
 
@@ -375,9 +377,9 @@
         </div>
 
         <!-- AI Reasoning Summary Banner -->
-        <div class="p-3.5 rounded-xl bg-secondary-container/15 border border-secondary/30 flex items-start gap-3">
-          <span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5" data-icon="psychology">psychology</span>
-          <p id="scheduleOverview" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
+        <div class="px-3.5 py-2 rounded-lg bg-secondary-container/15 border border-secondary/30 flex items-center gap-2 text-xs font-mono text-secondary">
+          <span class="material-symbols-outlined text-[16px] text-secondary shrink-0" data-icon="psychology">psychology</span>
+          <span id="scheduleOverview">7 sessions curated • 0 transit collisions</span>
         </div>
 
         <!-- Day Selector Tab Bar -->
@@ -462,34 +464,34 @@
       agent1Dot.className = "w-2 h-2 rounded-full bg-slate-600";
       agent1Timer.textContent = "--";
       agent1Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10";
-      agent1Subtext.textContent = "Safety, prompt sanitization & injection defenses.";
+      agent1Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-slate-500" data-icon="hourglass_empty">hourglass_empty</span><span>Standby</span>`;
 
       stepCatalog.className = "glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden";
       catalogDot.className = "w-2 h-2 rounded-full bg-slate-600";
       catalogTimer.textContent = "--";
       catalogTimer.className = "px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10";
-      catalogSubtext.textContent = "Searching 201 Devoxx Belgium sessions.";
+      catalogSubtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-slate-500" data-icon="hourglass_empty">hourglass_empty</span><span>Standby</span>`;
 
       stepAgent2.className = "glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden";
       agent2Dot.className = "w-2 h-2 rounded-full bg-slate-600";
       agent2Timer.textContent = "--";
       agent2Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10";
-      agent2Subtext.textContent = "Gemini 3.8 Flash conflict-free reasoning.";
+      agent2Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-slate-500" data-icon="hourglass_empty">hourglass_empty</span><span>Standby</span>`;
     }
 
     function setStepActive(stepId, text) {
       if (stepId === 'agent1') {
         stepAgent1.className = "glass-base rounded-xl p-5 border border-primary/50 relative overflow-hidden bg-primary/5 shadow-lg shadow-primary/5";
         agent1Dot.className = "w-2 h-2 rounded-full bg-primary-container beacon-pulse";
-        agent1Subtext.textContent = text || "Validating prompt safety & relevance...";
+        agent1Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary" data-icon="progress_activity">progress_activity</span><span class="text-primary">${text || 'Validating...'}</span>`;
       } else if (stepId === 'catalog') {
         stepCatalog.className = "glass-base rounded-xl p-5 border border-tertiary/50 relative overflow-hidden bg-tertiary/5 shadow-lg shadow-tertiary/5";
         catalogDot.className = "w-2 h-2 rounded-full bg-tertiary animate-ping";
-        catalogSubtext.textContent = text || "Querying session catalog...";
+        catalogSubtext.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-tertiary" data-icon="progress_activity">progress_activity</span><span class="text-tertiary">${text || 'Searching...'}</span>`;
       } else if (stepId === 'agent2') {
         stepAgent2.className = "glass-base rounded-xl p-5 border border-primary/50 relative overflow-hidden bg-primary/5 shadow-lg shadow-primary/5";
         agent2Dot.className = "w-2 h-2 rounded-full bg-primary-container beacon-pulse";
-        agent2Subtext.textContent = text || "Gemini 3.8 Flash synthesizing timetable...";
+        agent2Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary" data-icon="progress_activity">progress_activity</span><span class="text-primary">${text || 'Reasoning...'}</span>`;
       }
     }
 
@@ -499,19 +501,19 @@
         agent1Dot.className = "w-2 h-2 rounded-full bg-emerald-400";
         agent1Timer.textContent = `✓ ${durationText}`;
         agent1Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold";
-        if (subtext) agent1Subtext.textContent = subtext;
+        agent1Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400" data-icon="check_circle">check_circle</span><span class="text-emerald-400">${subtext || 'Completed Clean'}</span>`;
       } else if (stepId === 'catalog') {
         stepCatalog.className = "glass-base rounded-xl p-5 border border-tertiary/40 relative overflow-hidden bg-tertiary/10";
         catalogDot.className = "w-2 h-2 rounded-full bg-tertiary";
         catalogTimer.textContent = `✓ ${durationText}`;
         catalogTimer.className = "px-2 py-0.5 rounded text-xs font-mono bg-tertiary/10 text-tertiary border border-tertiary/30 font-semibold";
-        if (subtext) catalogSubtext.textContent = subtext;
+        catalogSubtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-tertiary" data-icon="check_circle">check_circle</span><span class="text-tertiary">${subtext || 'Indexed 201 Talks'}</span>`;
       } else if (stepId === 'agent2') {
         stepAgent2.className = "glass-base rounded-xl p-5 border border-emerald-500/40 relative overflow-hidden bg-emerald-950/20";
         agent2Dot.className = "w-2 h-2 rounded-full bg-emerald-400";
         agent2Timer.textContent = `✓ ${durationText}`;
         agent2Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold";
-        if (subtext) agent2Subtext.textContent = subtext;
+        agent2Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400" data-icon="check_circle">check_circle</span><span class="text-emerald-400">${subtext || 'Synthesized 5-Day Agenda'}</span>`;
       }
     }
 
@@ -521,7 +523,7 @@
         agent1Dot.className = "w-2 h-2 rounded-full bg-rose-400";
         agent1Timer.textContent = "✕ Flagged";
         agent1Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold";
-        agent1Subtext.textContent = "Validation rejected prompt.";
+        agent1Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-rose-400" data-icon="cancel">cancel</span><span class="text-rose-400">Rejected</span>`;
       }
     }
 
@@ -767,7 +769,7 @@
               </div>
             </div>
 
-            <div class="space-y-1.5">
+            <div class="space-y-1">
               <h3 class="text-base sm:text-lg font-bold text-white leading-snug tracking-tight">
                 ${escapeHtml(talk.title)}
               </h3>
@@ -777,24 +779,29 @@
               </p>
             </div>
 
-            ${talk.reason ? `
-              <div class="glass-highlight rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-on-surface leading-relaxed">
-                <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" data-icon="smart_toy">smart_toy</span>
-                <div>
-                  <strong class="text-primary font-semibold">Why this talk was chosen for you:</strong> ${escapeHtml(talk.reason)}
-                </div>
-              </div>
-            ` : ''}
+            <div id="abstract-${talk.talkId}" class="hidden p-3 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-on-surface-variant leading-relaxed">
+              <strong class="text-primary font-semibold">Why this talk fits:</strong> ${escapeHtml(talk.reason || 'Curated to match your technical focus.')}
+            </div>
 
-            <div class="flex items-center justify-between pt-1 border-t border-white/5">
+            <div class="flex items-center justify-between pt-2 border-t border-white/5">
               <div class="flex items-center gap-2">
-                <button type="button" class="bookmark-btn px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
+                <button type="button" class="bookmark-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
                   onclick="toggleBookmark(this)">
-                  <span class="material-symbols-outlined text-[15px]" data-icon="bookmark_add">bookmark_add</span>
-                  <span>Save</span>
+                  <span class="material-symbols-outlined text-[16px]" data-icon="bookmark_add">bookmark_add</span>
+                  <span>Bookmark</span>
                 </button>
+                ${talk.reason ? `
+                  <button type="button" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
+                    onclick="document.getElementById('abstract-${talk.talkId}').classList.toggle('hidden')">
+                    <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
+                    <span>Abstract</span>
+                  </button>
+                ` : ''}
               </div>
-              <span class="text-[11px] font-mono text-on-surface-variant/60">Session ID: #${talk.talkId}</span>
+              <span class="text-xs font-mono text-tertiary flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]" data-icon="map">map</span>
+                <span>${escapeHtml(talk.room || 'Room')} Transit Map</span>
+              </span>
             </div>
           `;
           talksList.appendChild(card);
