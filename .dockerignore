@@ -1,0 +1,7 @@
+.git
+.gradle
+build/
+bin/
+stitch_*.html
+*.log
+.DS_Store
