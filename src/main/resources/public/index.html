@@ -103,6 +103,69 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    /* Abstract rich HTML formatting */
+    .abstract-body strong, .abstract-body b {
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .abstract-body em, .abstract-body i {
+      font-style: italic;
+      color: #e2e8f0;
+    }
+    .abstract-body u {
+      text-decoration: underline;
+    }
+    .abstract-body ul {
+      list-style-type: disc;
+      padding-left: 1.25rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .abstract-body ol {
+      list-style-type: decimal;
+      padding-left: 1.25rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .abstract-body li {
+      margin-top: 0.25rem;
+      margin-bottom: 0.25rem;
+      color: #cbd5e1;
+    }
+    .abstract-body p {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .abstract-body h1, .abstract-body h2, .abstract-body h3, .abstract-body h4 {
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+    .abstract-body code {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.125rem 0.375rem;
+      border-radius: 0.25rem;
+      font-family: monospace;
+      font-size: 0.85em;
+      color: #ffb693;
+    }
+    .abstract-body a {
+      color: #ff8c42;
+      text-decoration: underline;
+    }
+    .abstract-body a:hover {
+      color: #ffb693;
+    }
+    .abstract-body blockquote {
+      border-left: 2px solid #FF6B00;
+      padding-left: 0.75rem;
+      font-style: italic;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      color: #cbd5e1;
+    }
   </style>
 </head>
 <body class="bg-background text-on-surface font-sans antialiased min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-white">
@@ -750,9 +813,9 @@
                 </span>
                 <span class="text-[10px] text-slate-500 font-normal normal-case">Session ID #${talk.talkId}</span>
               </div>
-              <p id="abstract-text-${talk.talkId}" class="text-slate-300 text-xs leading-relaxed whitespace-pre-line" data-loaded="${talk.talkAbstract ? 'true' : 'false'}">
-                ${escapeHtml(talk.talkAbstract || 'Loading official talk abstract...')}
-              </p>
+              <div id="abstract-text-${talk.talkId}" class="abstract-body text-slate-300 text-xs leading-relaxed whitespace-pre-line" data-loaded="${talk.talkAbstract ? 'true' : 'false'}">
+                ${formatAbstractHtml(talk.talkAbstract || 'Loading official talk abstract...')}
+              </div>
             </div>
 
             <div class="flex items-center pt-2 border-t border-white/5">
@@ -789,17 +852,17 @@
               const data = await res.json();
               const fullAbstract = data.description || data.summary;
               if (fullAbstract) {
-                textEl.textContent = fullAbstract;
+                textEl.innerHTML = formatAbstractHtml(fullAbstract);
                 textEl.setAttribute('data-loaded', 'true');
               } else {
-                textEl.textContent = 'No detailed abstract provided for this session.';
+                textEl.innerHTML = '<p class="italic text-slate-400">No detailed abstract provided for this session.</p>';
               }
             } else {
-              textEl.textContent = 'Unable to load abstract at this time.';
+              textEl.innerHTML = '<p class="text-red-400">Unable to load abstract at this time.</p>';
             }
           } catch (e) {
             console.warn('Failed to load abstract', e);
-            textEl.textContent = 'Unable to load abstract.';
+            textEl.innerHTML = '<p class="text-red-400">Unable to load abstract.</p>';
           }
         }
       } else {
@@ -855,6 +918,71 @@
       const div = document.createElement('div');
       div.innerText = text;
       return div.innerHTML;
+    }
+
+    function formatAbstractHtml(raw) {
+      if (!raw) return '<span class="italic text-slate-400">No detailed abstract provided for this session.</span>';
+
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(raw, 'text/html');
+
+        const allowedTags = new Set([
+          'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike',
+          'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'blockquote', 'code', 'pre', 'a'
+        ]);
+
+        const dangerousTags = new Set(['script', 'style', 'iframe', 'object', 'embed', 'form', 'button', 'input']);
+
+        function sanitize(node) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const tag = node.tagName.toLowerCase();
+            if (dangerousTags.has(tag)) {
+              node.remove();
+              return;
+            }
+
+            if (!allowedTags.has(tag)) {
+              const textBefore = document.createTextNode('<' + tag + '>');
+              const parent = node.parentNode;
+              if (parent) {
+                parent.insertBefore(textBefore, node);
+                while (node.firstChild) {
+                  sanitize(node.firstChild);
+                  parent.insertBefore(node.firstChild, node);
+                }
+                node.remove();
+              }
+              return;
+            }
+
+            const attrs = Array.from(node.attributes);
+            for (const attr of attrs) {
+              const name = attr.name.toLowerCase();
+              if (tag === 'a' && name === 'href') {
+                const val = attr.value.trim();
+                if (/^https?:\/\//i.test(val) || /^mailto:/i.test(val)) {
+                  node.setAttribute('target', '_blank');
+                  node.setAttribute('rel', 'noopener noreferrer');
+                } else {
+                  node.removeAttribute('href');
+                }
+              } else {
+                node.removeAttribute(attr.name);
+              }
+            }
+
+            Array.from(node.childNodes).forEach(sanitize);
+          }
+        }
+
+        Array.from(doc.body.childNodes).forEach(sanitize);
+        return doc.body.innerHTML;
+      } catch (e) {
+        console.warn('Error formatting abstract HTML', e);
+        return escapeHtml(raw);
+      }
     }
 
     // Markdown Export
