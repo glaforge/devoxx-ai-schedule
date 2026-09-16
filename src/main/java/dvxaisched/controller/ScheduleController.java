@@ -3,13 +3,21 @@ package dvxaisched.controller;
 import dvxaisched.model.ConferenceTalk;
 import dvxaisched.model.ScheduleRequest;
 import dvxaisched.model.ScheduleResponse;
+import dvxaisched.model.WorkflowProgressEvent;
 import dvxaisched.service.DevoxxAgentWorkflowService;
 import dvxaisched.service.DevoxxConferenceService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.*;
+import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.http.sse.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
@@ -42,27 +50,27 @@ public class ScheduleController {
     }
 
     @Get(uri = "/schedule/stream", produces = MediaType.TEXT_EVENT_STREAM)
-    public reactor.core.publisher.Flux<io.micronaut.http.sse.Event<dvxaisched.model.WorkflowProgressEvent>> streamSchedule(
+    public Flux<Event<WorkflowProgressEvent>> streamSchedule(
         @QueryValue(value = "interests", defaultValue = "") String interests
     ) {
         if (interests == null || interests.isBlank()) {
-            return reactor.core.publisher.Flux.just(
-                io.micronaut.http.sse.Event.of(dvxaisched.model.WorkflowProgressEvent.rejected("Interests cannot be empty.", 0L))
+            return Flux.just(
+                Event.of(WorkflowProgressEvent.rejected("Interests cannot be empty.", 0L))
             );
         }
 
         LOG.info("Received streaming schedule request: '{}'", interests);
-        return reactor.core.publisher.Flux.create(sink -> {
+        return Flux.create(sink -> {
             Thread.startVirtualThread(() -> {
                 try {
                     workflowService.processScheduleRequestWithProgress(interests, event -> {
-                        sink.next(io.micronaut.http.sse.Event.of(event));
+                        sink.next(Event.of(event));
                     });
                     sink.complete();
                 } catch (Exception e) {
                     LOG.error("Error streaming schedule for interests: {}", interests, e);
-                    sink.next(io.micronaut.http.sse.Event.of(
-                        dvxaisched.model.WorkflowProgressEvent.rejected("Error processing request: " + e.getMessage(), 0L)
+                    sink.next(Event.of(
+                        WorkflowProgressEvent.rejected("Error processing request: " + e.getMessage(), 0L)
                     ));
                     sink.complete();
                 }

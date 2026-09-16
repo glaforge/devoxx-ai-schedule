@@ -68,7 +68,7 @@ micronaut {
     }
 }
 
-tasks.named("dockerfile", io.micronaut.gradle.docker.MicronautDockerfile) {
+tasks.named("dockerfile") {
     baseImage = "eclipse-temurin:25-jre"
 }
 

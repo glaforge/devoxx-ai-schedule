@@ -1,5 +1,6 @@
 package dvxaisched;
 
+import dvxaisched.model.ConferenceTalk;
 import dvxaisched.model.ScheduleRequest;
 import dvxaisched.model.ScheduleResponse;
 import io.micronaut.http.HttpRequest;
@@ -84,9 +85,9 @@ class ScheduleWorkflowIntegrationTest {
 
     @Test
     void testTalkByIdEndpoint() {
-        HttpResponse<dvxaisched.model.ConferenceTalk> response = client.toBlocking().exchange(
+        HttpResponse<ConferenceTalk> response = client.toBlocking().exchange(
             HttpRequest.GET("/api/talks/7006"),
-            dvxaisched.model.ConferenceTalk.class
+            ConferenceTalk.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatus());

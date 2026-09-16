@@ -1,7 +1,6 @@
 package dvxaisched.service;
 
 import dvxaisched.model.ConferenceTalk;
-import dvxaisched.model.SpeakerInfo;
 import io.micronaut.core.io.ResourceResolver;
 import io.micronaut.serde.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -10,8 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 
 @Singleton
 public class DevoxxConferenceService {
@@ -98,11 +104,11 @@ public class DevoxxConferenceService {
             .filter(t -> day == null || day.isBlank() || (t.day() != null && t.day().equalsIgnoreCase(day)))
             .map(t -> {
                 int score = scoreTalk(t, keywords);
-                return new AbstractMap.SimpleEntry<>(t, score);
+                return new SimpleEntry<>(t, score);
             })
             .filter(entry -> entry.getValue() > 0)
             .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
-            .map(Map.Entry::getKey)
+            .map(Entry::getKey)
             .limit(limit > 0 ? limit : 20)
             .toList();
     }

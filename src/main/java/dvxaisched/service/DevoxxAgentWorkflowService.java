@@ -1,27 +1,30 @@
 package dvxaisched.service;
 
 import dev.langchain4j.agentic.AgenticServices;
-import dev.langchain4j.model.chat.ChatModel;
-import dvxaisched.agent.DevoxxConferenceTools;
-import dvxaisched.agent.InterestValidatorAgent;
-import dvxaisched.agent.ScheduleBuilderAgent;
-import dvxaisched.model.ConferenceTalk;
-import dvxaisched.model.ScheduleResponse;
-import dvxaisched.model.ValidationResult;
-import jakarta.inject.Singleton;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import dev.langchain4j.agentic.observability.AfterAgentToolExecution;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentRequest;
 import dev.langchain4j.agentic.observability.AgentResponse;
 import dev.langchain4j.agentic.observability.BeforeAgentToolExecution;
+import dev.langchain4j.agentic.scope.AgenticScope;
+import dev.langchain4j.agentic.scope.DefaultAgenticScope;
+import dev.langchain4j.invocation.LangChain4jManaged;
+import dev.langchain4j.model.chat.ChatModel;
 import dvxaisched.agent.DayScheduleBuilderAgent;
+import dvxaisched.agent.DevoxxConferenceTools;
+import dvxaisched.agent.InterestValidatorAgent;
 import dvxaisched.agent.ParallelScheduleBuilderWorkflow;
+import dvxaisched.agent.ScheduleBuilderAgent;
+import dvxaisched.model.ConferenceTalk;
 import dvxaisched.model.DayPlanRequest;
 import dvxaisched.model.DaySchedule;
+import dvxaisched.model.ScheduleResponse;
+import dvxaisched.model.ScheduledTalk;
+import dvxaisched.model.ValidationResult;
 import dvxaisched.model.WorkflowProgressEvent;
+import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -213,13 +216,12 @@ public class DevoxxAgentWorkflowService {
         String rawInput = userInterests.trim();
 
         // Establish an AgenticScope across the 2-agent sequence
-        dev.langchain4j.agentic.scope.DefaultAgenticScope scope =
-            dev.langchain4j.agentic.scope.DefaultAgenticScope.ephemeralAgenticScope();
+        DefaultAgenticScope scope = DefaultAgenticScope.ephemeralAgenticScope();
         if (progressConsumer != null) {
             scope.writeExecutionContext(Consumer.class, progressConsumer);
         }
-        dev.langchain4j.invocation.LangChain4jManaged.setCurrent(
-            Map.of(dev.langchain4j.agentic.scope.AgenticScope.class, scope)
+        LangChain4jManaged.setCurrent(
+            Map.of(AgenticScope.class, scope)
         );
 
         try {
@@ -383,17 +385,17 @@ public class DevoxxAgentWorkflowService {
 
             return finalResponse;
         } finally {
-            dev.langchain4j.invocation.LangChain4jManaged.removeCurrent();
+            LangChain4jManaged.removeCurrent();
         }
     }
 
-    private List<dvxaisched.model.DaySchedule> enrichDaysWithAbstracts(List<dvxaisched.model.DaySchedule> days) {
+    private List<DaySchedule> enrichDaysWithAbstracts(List<DaySchedule> days) {
         if (days == null) return List.of();
-        List<dvxaisched.model.DaySchedule> enrichedDays = new ArrayList<>();
-        for (dvxaisched.model.DaySchedule day : days) {
-            List<dvxaisched.model.ScheduledTalk> enrichedTalks = new ArrayList<>();
+        List<DaySchedule> enrichedDays = new ArrayList<>();
+        for (DaySchedule day : days) {
+            List<ScheduledTalk> enrichedTalks = new ArrayList<>();
             if (day.talks() != null) {
-                for (dvxaisched.model.ScheduledTalk talk : day.talks()) {
+                for (ScheduledTalk talk : day.talks()) {
                     String realAbstract = conferenceService.getTalkById(talk.talkId())
                         .map(ConferenceTalk::talkAbstract)
                         .filter(s -> !s.isBlank())
@@ -406,7 +408,7 @@ public class DevoxxAgentWorkflowService {
                                 .orElse(talk.talkAbstract() != null ? talk.talkAbstract() : "");
                         });
 
-                    enrichedTalks.add(new dvxaisched.model.ScheduledTalk(
+                    enrichedTalks.add(new ScheduledTalk(
                         talk.talkId(),
                         talk.day(),
                         talk.date(),
@@ -422,7 +424,7 @@ public class DevoxxAgentWorkflowService {
                     ));
                 }
             }
-            enrichedDays.add(new dvxaisched.model.DaySchedule(day.day(), day.date(), day.dayLabel(), enrichedTalks));
+            enrichedDays.add(new DaySchedule(day.day(), day.date(), day.dayLabel(), enrichedTalks));
         }
         return enrichedDays;
     }
@@ -437,7 +439,7 @@ public class DevoxxAgentWorkflowService {
 
     private ScheduleResponse buildFallbackSchedule(String query, List<ConferenceTalk> talks) {
         LOG.info("Building fallback structured schedule for query '{}'", query);
-        List<dvxaisched.model.DaySchedule> days = new ArrayList<>();
+        List<DaySchedule> days = new ArrayList<>();
         String[] dayNames = {"monday", "tuesday", "wednesday", "thursday", "friday"};
         String[] dates = {"2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"};
         String[] labels = {
@@ -454,9 +456,9 @@ public class DevoxxAgentWorkflowService {
                 .filter(t -> t.day().equalsIgnoreCase(day))
                 .toList();
 
-            List<dvxaisched.model.ScheduledTalk> scheduled = new ArrayList<>();
+            List<ScheduledTalk> scheduled = new ArrayList<>();
             for (ConferenceTalk t : dayTalks) {
-                scheduled.add(new dvxaisched.model.ScheduledTalk(
+                scheduled.add(new ScheduledTalk(
                     t.id(),
                     t.day(),
                     t.date(),
@@ -471,7 +473,7 @@ public class DevoxxAgentWorkflowService {
                     t.talkAbstract()
                 ));
             }
-            days.add(new dvxaisched.model.DaySchedule(day, dates[i], labels[i], scheduled));
+            days.add(new DaySchedule(day, dates[i], labels[i], scheduled));
         }
 
         return new ScheduleResponse(
