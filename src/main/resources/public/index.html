@@ -755,18 +755,12 @@
               </p>
             </div>
 
-            <div class="flex items-center justify-between pt-2 border-t border-white/5">
-              <div class="flex items-center gap-2">
-                <button type="button" id="abstract-btn-${talk.talkId}" class="abstract-toggle-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
-                  onclick="toggleAbstract(${talk.talkId}, this)">
-                  <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
-                  <span>Abstract</span>
-                </button>
-              </div>
-              <span class="text-xs font-mono text-tertiary flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]" data-icon="map">map</span>
-                <span>${escapeHtml(talk.room || 'Room')} Transit Map</span>
-              </span>
+            <div class="flex items-center pt-2 border-t border-white/5">
+              <button type="button" id="abstract-btn-${talk.talkId}" class="abstract-toggle-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
+                onclick="toggleAbstract(${talk.talkId}, this)">
+                <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
+                <span>Abstract</span>
+              </button>
             </div>
           `;
           talksList.appendChild(card);
