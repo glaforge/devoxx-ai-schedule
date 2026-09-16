@@ -255,12 +255,13 @@ public class DevoxxAgentWorkflowService {
                 ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
                 if (response != null && response.days() != null && !response.days().isEmpty() &&
                     response.days().stream().anyMatch(d -> d.talks() != null && !d.talks().isEmpty())) {
+                    List<dvxaisched.model.DaySchedule> enrichedDays = enrichDaysWithAbstracts(response.days());
                     finalResponse = new ScheduleResponse(
                         true,
                         null,
                         response.theme() != null ? response.theme() : query,
                         response.overview(),
-                        response.days()
+                        enrichedDays
                     );
                 }
             } catch (Exception e) {
@@ -290,6 +291,46 @@ public class DevoxxAgentWorkflowService {
         } finally {
             dev.langchain4j.invocation.LangChain4jManaged.removeCurrent();
         }
+    }
+
+    private List<dvxaisched.model.DaySchedule> enrichDaysWithAbstracts(List<dvxaisched.model.DaySchedule> days) {
+        if (days == null) return List.of();
+        List<dvxaisched.model.DaySchedule> enrichedDays = new ArrayList<>();
+        for (dvxaisched.model.DaySchedule day : days) {
+            List<dvxaisched.model.ScheduledTalk> enrichedTalks = new ArrayList<>();
+            if (day.talks() != null) {
+                for (dvxaisched.model.ScheduledTalk talk : day.talks()) {
+                    String realAbstract = conferenceService.getTalkById(talk.talkId())
+                        .map(ConferenceTalk::summary)
+                        .filter(s -> !s.isBlank())
+                        .orElseGet(() -> {
+                            if (talk.title() == null || talk.title().isBlank()) return "";
+                            return conferenceService.getAllTalks().stream()
+                                .filter(t -> t.title() != null && t.title().equalsIgnoreCase(talk.title().trim()))
+                                .map(ConferenceTalk::summary)
+                                .findFirst()
+                                .orElse(talk.talkAbstract() != null ? talk.talkAbstract() : "");
+                        });
+
+                    enrichedTalks.add(new dvxaisched.model.ScheduledTalk(
+                        talk.talkId(),
+                        talk.day(),
+                        talk.date(),
+                        talk.startTime(),
+                        talk.endTime(),
+                        talk.room(),
+                        talk.title(),
+                        talk.speakers(),
+                        talk.track(),
+                        talk.sessionType(),
+                        talk.reason(),
+                        realAbstract
+                    ));
+                }
+            }
+            enrichedDays.add(new dvxaisched.model.DaySchedule(day.day(), day.date(), day.dayLabel(), enrichedTalks));
+        }
+        return enrichedDays;
     }
 
     private ValidationResult performFallbackValidation(String input) {
@@ -332,7 +373,8 @@ public class DevoxxAgentWorkflowService {
                     t.speakersSummary(),
                     t.track(),
                     t.sessionType(),
-                    "Matches your interest in " + query
+                    "Matches your interest in " + query,
+                    t.summary()
                 ));
             }
             days.add(new dvxaisched.model.DaySchedule(day, dates[i], labels[i], scheduled));

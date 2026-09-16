@@ -137,49 +137,21 @@
       <div class="hidden xl:flex items-center gap-2.5 pl-5 border-l border-white/10">
         <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono">
           <span class="w-2 h-2 rounded-full bg-emerald-400 beacon-emerald"></span>
-          <span class="text-on-surface">Gemini 3.8 Flash • Online</span>
+          <span class="text-on-surface">Gemini 3.8 Flash</span>
         </div>
         <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/25 border border-secondary/30 text-xs font-mono text-secondary">
           <span class="material-symbols-outlined text-[14px]" data-icon="memory">memory</span>
-          <span>LangChain4j Agentic</span>
+          <span>LangChain4j</span>
         </div>
         <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-xs font-mono text-on-surface-variant">
-          <span>Micronaut 5</span>
+          <span>Micronaut</span>
         </div>
       </div>
-    </div>
-
-    <!-- Navigation & Quick Stats -->
-    <div class="flex items-center gap-3">
-      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-xs font-mono text-on-surface-variant">
-        <span class="material-symbols-outlined text-[15px] text-tertiary" data-icon="event_note">event_note</span>
-        <span id="headerTalksCount">201 Talks in Catalog</span>
-      </div>
-      <a href="#interestsInput" class="px-3 py-1.5 rounded-lg bg-primary-container/20 hover:bg-primary-container/30 border border-primary-container/40 text-xs font-mono text-primary transition flex items-center gap-1.5">
-        <span class="material-symbols-outlined text-[15px]" data-icon="bolt">bolt</span>
-        <span>Schedule Assistant</span>
-      </a>
     </div>
   </header>
 
   <!-- Main View Canvas -->
   <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-    <!-- Hero Section & Architecture Narrative -->
-    <section class="text-center max-w-3xl mx-auto space-y-3 pt-2">
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary-container/20 border border-secondary/40 text-secondary text-xs font-mono">
-        <span class="material-symbols-outlined text-[16px] text-secondary" data-icon="auto_awesome">auto_awesome</span>
-        <span>Autonomous Multi-Agent Conference Engine</span>
-        <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-        <span class="text-label-caps font-mono opacity-80">v3.8.4</span>
-      </div>
-      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-        Personalized Devoxx 2026 Schedule
-      </h1>
-      <p class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-        AI-orchestrated itinerary matching your technical focus and transit preferences.
-      </p>
-    </section>
 
     <!-- Input Console Glass Card -->
     <section class="relative">
@@ -257,13 +229,11 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-secondary text-[20px]" data-icon="account_tree">account_tree</span>
-          <h2 class="text-sm font-bold uppercase tracking-wider text-white">Agentic Workflow Pipeline Telemetry</h2>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-white">Agentic Workflow</h2>
         </div>
         <!-- Telemetry Stats Ticker -->
         <div class="flex items-center gap-3 text-xs font-mono text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-white/5">
           <span id="totalTimer" class="text-primary font-semibold">Elapsed: 0.0s</span>
-          <span class="text-white/20">•</span>
-          <span>Model: <strong class="text-tertiary">Gemini 3.8 Flash</strong></span>
           <span class="text-white/20">•</span>
           <span>Conflict Loss: <strong class="text-emerald-400">0.00%</strong></span>
         </div>
@@ -370,16 +340,13 @@
               <span class="material-symbols-outlined text-[16px]" data-icon="calendar_month">calendar_month</span>
               <span>Export Calendar (.ics)</span>
             </button>
-            <button id="printBtn" class="p-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-white/10 transition-colors" title="Print Agenda">
-              <span class="material-symbols-outlined text-[18px]" data-icon="print">print</span>
-            </button>
           </div>
         </div>
 
         <!-- AI Reasoning Summary Banner -->
         <div class="px-3.5 py-2 rounded-lg bg-secondary-container/15 border border-secondary/30 flex items-center gap-2 text-xs font-mono text-secondary">
           <span class="material-symbols-outlined text-[16px] text-secondary shrink-0" data-icon="psychology">psychology</span>
-          <span id="scheduleOverview">7 sessions curated • 0 transit collisions</span>
+          <span id="scheduleOverview">7 sessions curated</span>
         </div>
 
         <!-- Day Selector Tab Bar -->
@@ -395,19 +362,6 @@
     </section>
 
   </main>
-
-  <!-- Footer -->
-  <footer class="w-full px-4 sm:px-8 py-8 flex flex-col sm:flex-row justify-between items-center gap-4 bg-surface-container-lowest border-t border-white/10 mt-20 relative z-10 text-xs text-on-surface-variant font-mono">
-    <div class="flex items-center gap-2">
-      <span class="w-2 h-2 rounded-full bg-primary-container"></span>
-      <span>Devoxx Belgium 2026 AI Schedule Curator • Powered by Gemini 3.8 Flash &amp; LangChain4j</span>
-    </div>
-    <div class="flex items-center gap-4">
-      <span>Oct 5–9, 2026</span>
-      <span>•</span>
-      <span>Kinepolis Antwerp</span>
-    </div>
-  </footer>
 
   <!-- Application Logic & SSE Streaming -->
   <script>
@@ -749,6 +703,7 @@
 
           const trackBadge = getTrackBadge(talk.track);
           const typeBadge = getSessionTypeBadge(talk.sessionType);
+          const isBookmarked = isTalkBookmarked(talk.talkId);
 
           card.innerHTML = `
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -779,24 +734,42 @@
               </p>
             </div>
 
-            <div id="abstract-${talk.talkId}" class="hidden p-3 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-on-surface-variant leading-relaxed">
-              <strong class="text-primary font-semibold">Why this talk fits:</strong> ${escapeHtml(talk.reason || 'Curated to match your technical focus.')}
+            ${talk.reason ? `
+              <div class="rounded-xl p-3.5 bg-primary/5 border border-primary/20 flex items-start gap-2.5 text-xs text-on-surface leading-relaxed">
+                <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" data-icon="psychology">psychology</span>
+                <div>
+                  <strong class="text-primary font-semibold">Why this talk was chosen for you:</strong>
+                  <span class="text-slate-200 ml-1">${escapeHtml(talk.reason)}</span>
+                </div>
+              </div>
+            ` : ''}
+
+            <div id="abstract-${talk.talkId}" class="hidden p-4 rounded-xl bg-surface-container-low/90 border border-white/10 text-xs leading-relaxed space-y-2">
+              <div class="flex items-center justify-between text-tertiary font-mono text-[11px] uppercase tracking-wider font-semibold">
+                <span class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[15px]" data-icon="subject">subject</span>
+                  <span>Official Talk Abstract</span>
+                </span>
+                <span class="text-[10px] text-slate-500 font-normal normal-case">Session ID #${talk.talkId}</span>
+              </div>
+              <p id="abstract-text-${talk.talkId}" class="text-slate-300 text-xs leading-relaxed" data-loaded="${talk.talkAbstract ? 'true' : 'false'}">
+                ${escapeHtml(talk.talkAbstract || 'Loading official talk abstract...')}
+              </p>
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-white/5">
               <div class="flex items-center gap-2">
-                <button type="button" class="bookmark-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
-                  onclick="toggleBookmark(this)">
-                  <span class="material-symbols-outlined text-[16px]" data-icon="bookmark_add">bookmark_add</span>
-                  <span>Bookmark</span>
+                <button type="button" class="bookmark-btn px-3 py-1.5 rounded-lg ${isBookmarked ? 'bg-primary-container/20 border border-primary/40 text-primary' : 'bg-surface-container hover:bg-surface-container-high border border-white/10 text-on-surface-variant hover:text-white'} text-xs font-mono transition flex items-center gap-1.5"
+                  data-saved="${isBookmarked ? 'true' : 'false'}"
+                  onclick="toggleBookmark(this, ${talk.talkId})">
+                  <span class="material-symbols-outlined text-[16px] ${isBookmarked ? 'text-primary' : ''}" data-icon="${isBookmarked ? 'bookmark_added' : 'bookmark_add'}">${isBookmarked ? 'bookmark_added' : 'bookmark_add'}</span>
+                  <span>${isBookmarked ? 'Saved' : 'Bookmark'}</span>
                 </button>
-                ${talk.reason ? `
-                  <button type="button" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
-                    onclick="document.getElementById('abstract-${talk.talkId}').classList.toggle('hidden')">
-                    <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
-                    <span>Abstract</span>
-                  </button>
-                ` : ''}
+                <button type="button" id="abstract-btn-${talk.talkId}" class="abstract-toggle-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
+                  onclick="toggleAbstract(${talk.talkId}, this)">
+                  <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
+                  <span>Abstract</span>
+                </button>
               </div>
               <span class="text-xs font-mono text-tertiary flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]" data-icon="map">map</span>
@@ -812,18 +785,72 @@
       });
     }
 
-    function toggleBookmark(btn) {
-      const isSaved = btn.getAttribute('data-saved') === 'true';
+    const bookmarkedTalkIds = new Set(JSON.parse(localStorage.getItem('dvx_bookmarks') || '[]'));
+
+    function isTalkBookmarked(talkId) {
+      return bookmarkedTalkIds.has(Number(talkId));
+    }
+
+    function toggleBookmark(btn, talkId) {
+      const id = Number(talkId);
+      const isSaved = bookmarkedTalkIds.has(id);
       if (isSaved) {
+        bookmarkedTalkIds.delete(id);
         btn.setAttribute('data-saved', 'false');
-        btn.className = "bookmark-btn px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5";
-        btn.innerHTML = `<span class="material-symbols-outlined text-[15px]" data-icon="bookmark_add">bookmark_add</span><span>Save</span>`;
+        btn.className = "bookmark-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5";
+        btn.innerHTML = `<span class="material-symbols-outlined text-[16px]" data-icon="bookmark_add">bookmark_add</span><span>Bookmark</span>`;
       } else {
+        bookmarkedTalkIds.add(id);
         btn.setAttribute('data-saved', 'true');
-        btn.className = "bookmark-btn px-2.5 py-1 rounded-lg bg-primary-container/20 border border-primary/40 text-xs font-mono text-primary transition flex items-center gap-1.5";
-        btn.innerHTML = `<span class="material-symbols-outlined text-[15px] text-primary" data-icon="bookmark_added">bookmark_added</span><span>Saved</span>`;
+        btn.className = "bookmark-btn px-3 py-1.5 rounded-lg bg-primary-container/20 border border-primary/40 text-xs font-mono text-primary transition flex items-center gap-1.5";
+        btn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-primary" data-icon="bookmark_added">bookmark_added</span><span>Saved</span>`;
+      }
+      try {
+        localStorage.setItem('dvx_bookmarks', JSON.stringify(Array.from(bookmarkedTalkIds)));
+      } catch (e) {
+        console.warn('Failed to save bookmark in localStorage', e);
       }
     }
+
+    async function toggleAbstract(talkId, btn) {
+      const container = document.getElementById(`abstract-${talkId}`);
+      if (!container) return;
+      const isHidden = container.classList.contains('hidden');
+      if (isHidden) {
+        container.classList.remove('hidden');
+        if (btn) {
+          btn.classList.add('border-primary/40', 'text-primary', 'bg-primary/10');
+          btn.classList.remove('text-on-surface-variant');
+        }
+        const textEl = document.getElementById(`abstract-text-${talkId}`);
+        if (textEl && textEl.getAttribute('data-loaded') !== 'true') {
+          try {
+            const res = await fetch(`/api/talks/${talkId}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.summary) {
+                textEl.textContent = data.summary;
+                textEl.setAttribute('data-loaded', 'true');
+              } else {
+                textEl.textContent = 'No detailed abstract provided for this session.';
+              }
+            } else {
+              textEl.textContent = 'Unable to load abstract at this time.';
+            }
+          } catch (e) {
+            console.warn('Failed to load abstract', e);
+            textEl.textContent = 'Unable to load abstract.';
+          }
+        }
+      } else {
+        container.classList.add('hidden');
+        if (btn) {
+          btn.classList.remove('border-primary/40', 'text-primary', 'bg-primary/10');
+          btn.classList.add('text-on-surface-variant');
+        }
+      }
+    }
+
 
     function getTrackBadge(track) {
       if (!track) return `<span class="px-2.5 py-0.5 rounded-full bg-white/5 text-slate-300 border border-white/10 text-[11px] font-mono">General</span>`;

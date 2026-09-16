@@ -84,6 +84,13 @@ public class ScheduleController {
         return HttpResponse.ok(conferenceService.searchTalks(query, day, limit));
     }
 
+    @Get(uri = "/talks/{id}", produces = MediaType.APPLICATION_JSON)
+    public HttpResponse<ConferenceTalk> getTalkById(@PathVariable long id) {
+        return conferenceService.getTalkById(id)
+            .map(HttpResponse::ok)
+            .orElseGet(HttpResponse::notFound);
+    }
+
     @Get(uri = "/sample-interests", produces = MediaType.APPLICATION_JSON)
     public HttpResponse<List<Map<String, String>>> getSampleInterests() {
         return HttpResponse.ok(List.of(

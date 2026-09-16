@@ -36,6 +36,10 @@ class ScheduleWorkflowIntegrationTest {
         assertFalse(body.days().isEmpty(), "Schedule should contain days");
         assertTrue(body.days().stream().anyMatch(d -> d.talks() != null && !d.talks().isEmpty()),
             "At least one day should have scheduled talks");
+        assertTrue(body.days().stream()
+            .flatMap(d -> d.talks().stream())
+            .anyMatch(t -> t.talkAbstract() != null && !t.talkAbstract().isBlank()),
+            "Scheduled talks should have enriched abstracts");
     }
 
     @Test
@@ -76,5 +80,19 @@ class ScheduleWorkflowIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatus());
         assertNotNull(response.body());
         assertTrue(response.body().contains("AI Agents & GenAI"));
+    }
+
+    @Test
+    void testTalkByIdEndpoint() {
+        HttpResponse<dvxaisched.model.ConferenceTalk> response = client.toBlocking().exchange(
+            HttpRequest.GET("/api/talks/7006"),
+            dvxaisched.model.ConferenceTalk.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertNotNull(response.body());
+        assertEquals(7006, response.body().id());
+        assertNotNull(response.body().summary());
+        assertFalse(response.body().summary().isBlank());
     }
 }
