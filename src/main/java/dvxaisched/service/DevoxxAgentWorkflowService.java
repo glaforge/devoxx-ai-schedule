@@ -253,13 +253,14 @@ public class DevoxxAgentWorkflowService {
 
             try {
                 ScheduleResponse response = scheduleBuilderAgent.buildSchedule(query, candidatePrompt);
-                if (response != null) {
+                if (response != null && response.days() != null && !response.days().isEmpty() &&
+                    response.days().stream().anyMatch(d -> d.talks() != null && !d.talks().isEmpty())) {
                     finalResponse = new ScheduleResponse(
                         true,
                         null,
                         response.theme() != null ? response.theme() : query,
                         response.overview(),
-                        response.days() != null ? response.days() : List.of()
+                        response.days()
                     );
                 }
             } catch (Exception e) {

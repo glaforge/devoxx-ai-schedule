@@ -1,296 +1,413 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Devoxx Belgium 2026 — AI Agenda Curator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Devoxx Belgium 2026 — AI Schedule Curator</title>
+
+  <!-- Google Fonts: Geist & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
     tailwind.config = {
+      darkMode: "class",
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
           colors: {
-            brand: {
-              50: '#fef7ee',
-              100: '#fdedd6',
-              500: '#f97316',
-              600: '#ea580c',
-              700: '#c2410c',
-            }
+            "background": "#0b0f19",
+            "surface-dim": "#0f131d",
+            "surface": "#0f131d",
+            "surface-container-lowest": "#0a0e18",
+            "surface-container-low": "#171b26",
+            "surface-container": "#1c1f2a",
+            "surface-container-high": "#262a35",
+            "surface-container-highest": "#313540",
+            "on-surface": "#dfe2f1",
+            "on-surface-variant": "#94a3b8",
+            "primary": "#ffb693",
+            "primary-container": "#ff6b00",
+            "on-primary-container": "#572000",
+            "secondary": "#d0bcff",
+            "secondary-container": "#571bc1",
+            "tertiary": "#4cd7f6",
+            "tertiary-container": "#00a7c3",
+            "error": "#ffb4ab",
+            "error-container": "#93000a"
+          },
+          fontFamily: {
+            "sans": ["Geist", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"]
           }
         }
       }
     }
   </script>
   <style>
-    .glass {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+    .glass-base {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .glass-card {
-      background: rgba(30, 41, 59, 0.6);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+    .glass-surface-2 {
+      background: rgba(30, 41, 59, 0.65);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
-    .gradient-text {
-      background: linear-gradient(135deg, #fb923c 0%, #f43f5e 50%, #c084fc 100%);
+    .glass-highlight {
+      background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+      border: 1px solid rgba(255, 107, 0, 0.28);
+    }
+    .primary-btn-gradient {
+      background: linear-gradient(135deg, #FF6B00 0%, #F59E0B 100%);
+      box-shadow: 0 0 24px -3px rgba(255, 107, 0, 0.45);
+    }
+    .primary-btn-gradient:hover {
+      box-shadow: 0 0 32px 0px rgba(255, 107, 0, 0.65);
+      transform: scale(0.985);
+    }
+    .beacon-pulse {
+      box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.7);
+      animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring {
+      to {
+        box-shadow: 0 0 0 10px rgba(255, 107, 0, 0);
+      }
+    }
+    .beacon-emerald {
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+      animation: pulse-ring-emerald 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring-emerald {
+      to {
+        box-shadow: 0 0 0 8px rgba(74, 222, 128, 0);
+      }
+    }
+    .gradient-title {
+      background: linear-gradient(135deg, #FF6B00 0%, #ffb693 50%, #d0bcff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
-<body class="min-h-full flex flex-col font-sans selection:bg-orange-500 selection:text-white bg-slate-950">
+<body class="bg-background text-on-surface font-sans antialiased min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-white">
 
-  <!-- Background glow effect -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-orange-600/15 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-10 left-1/3 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
+  <!-- Ambient Obsidian / Violet / Amber Background Glow Mesh -->
+  <div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute -top-[15%] left-[20%] w-[55vw] h-[55vw] rounded-full bg-secondary-container/15 blur-[140px]"></div>
+    <div class="absolute top-[25%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-primary-container/10 blur-[160px]"></div>
+    <div class="absolute bottom-[10%] left-[5%] w-[40vw] h-[40vw] rounded-full bg-tertiary-container/10 blur-[130px]"></div>
   </div>
 
-  <div class="relative z-10 flex-1 flex flex-col">
-    <!-- Navigation Bar -->
-    <header class="border-b border-slate-800/80 glass sticky top-0 z-30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center font-bold text-white shadow-lg shadow-orange-500/20">
-            DVX
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold tracking-tight text-white text-lg">Devoxx Belgium 2026</span>
-              <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">Oct 5–9</span>
-            </div>
-            <p class="text-xs text-slate-400">Kinepolis Antwerp • AI Schedule Curator</p>
-          </div>
+  <!-- Top Navigation Bar -->
+  <header class="w-full px-4 sm:px-8 py-3.5 flex justify-between items-center bg-surface-container-low/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+    <!-- Brand Identity & Polygon Logo -->
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3 cursor-pointer group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-lg shadow-primary-container/20 group-hover:scale-105 transition-transform duration-200">
+          <span class="material-symbols-outlined text-surface-container-lowest text-[22px] font-bold" data-icon="deployed_code">deployed_code</span>
         </div>
-        <div class="flex items-center gap-3 text-xs font-mono">
-          <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Gemini 3.8 Flash
+        <div class="flex flex-col">
+          <span class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            DEVOXX BELGIUM 2026
           </span>
-          <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
-            LangChain4j Agentic
-          </span>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-950/60 border border-orange-500/30 text-orange-300">
-            Micronaut 5
+          <span class="text-[11px] font-mono text-on-surface-variant flex items-center gap-1">
+            <span class="material-symbols-outlined text-[13px] text-primary" data-icon="location_on">location_on</span>
+            Oct 5–9 • Kinepolis Antwerp
           </span>
         </div>
       </div>
-    </header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-      <!-- Hero Header -->
-      <section class="text-center max-w-3xl mx-auto space-y-3 pt-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
-          <span>⚡ Multi-Agent Conference Planning</span>
-          <span class="text-slate-600">•</span>
-          <span class="text-orange-400">196 Sessions Available</span>
+      <!-- Live Pipeline & Microservice Telemetry Status Indicators -->
+      <div class="hidden xl:flex items-center gap-2.5 pl-5 border-l border-white/10">
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 beacon-emerald"></span>
+          <span class="text-on-surface">Gemini 3.8 Flash • Online</span>
         </div>
-        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight">
-          Craft Your Personal <br>
-          <span class="gradient-text">Devoxx Belgium 2026</span> Schedule
-        </h1>
-        <p class="text-slate-400 text-sm sm:text-base">
-          Describe your tech stack, goals, or topics of interest. Our two-agent AI system validates your prompt for safety, queries the conference database, and curates a conflict-free personalized agenda.
-        </p>
-      </section>
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/25 border border-secondary/30 text-xs font-mono text-secondary">
+          <span class="material-symbols-outlined text-[14px]" data-icon="memory">memory</span>
+          <span>LangChain4j Agentic</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-xs font-mono text-on-surface-variant">
+          <span>Micronaut 5</span>
+        </div>
+      </div>
+    </div>
 
-      <!-- Input Card -->
-      <section class="glass rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-800 space-y-6">
-        <form id="scheduleForm" class="space-y-4">
-          <label for="interestsInput" class="block text-sm font-medium text-slate-200">
-            What topics, technologies, or challenges are you interested in?
-          </label>
-          <div class="relative">
+    <!-- Navigation & Quick Stats -->
+    <div class="flex items-center gap-3">
+      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-xs font-mono text-on-surface-variant">
+        <span class="material-symbols-outlined text-[15px] text-tertiary" data-icon="event_note">event_note</span>
+        <span id="headerTalksCount">201 Talks in Catalog</span>
+      </div>
+      <a href="#interestsInput" class="px-3 py-1.5 rounded-lg bg-primary-container/20 hover:bg-primary-container/30 border border-primary-container/40 text-xs font-mono text-primary transition flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[15px]" data-icon="bolt">bolt</span>
+        <span>Schedule Assistant</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main View Canvas -->
+  <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Hero Section & Architecture Narrative -->
+    <section class="text-center max-w-3xl mx-auto space-y-3 pt-2">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary-container/20 border border-secondary/40 text-secondary text-xs font-mono">
+        <span class="material-symbols-outlined text-[16px] text-secondary" data-icon="auto_awesome">auto_awesome</span>
+        <span>Autonomous Multi-Agent Conference Engine</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+        <span class="opacity-80">Gemini 3.8 Flash</span>
+      </div>
+      <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+        Craft Your Personal <br class="hidden sm:inline"/>
+        <span class="gradient-title">Devoxx Belgium 2026</span> Schedule
+      </h1>
+      <p class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+        Describe your tech stack, goals, or topics of interest. Our two-agent AI system validates your prompt for safety, queries 201 conference sessions, and synthesizes a conflict-free personalized agenda.
+      </p>
+    </section>
+
+    <!-- Input Console Glass Card -->
+    <section class="relative">
+      <div class="glass-surface-2 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl border border-white/10">
+        <!-- Subtle Top Specular Lighting Flare -->
+        <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-primary/20 blur-3xl rounded-full pointer-events-none"></div>
+
+        <form id="scheduleForm" class="space-y-5">
+          <div class="flex items-center justify-between">
+            <label for="interestsInput" class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[16px]" data-icon="terminal">terminal</span>
+              Natural Language Conference Agent Prompt
+            </label>
+            <div class="flex items-center gap-2 text-xs font-mono text-tertiary">
+              <span class="material-symbols-outlined text-[14px]" data-icon="electric_bolt">electric_bolt</span>
+              <span>Guardrails &amp; Constraints Active</span>
+            </div>
+          </div>
+
+          <!-- Interactive Textarea -->
+          <div class="relative group">
             <textarea
               id="interestsInput"
               rows="3"
-              class="w-full rounded-xl bg-slate-900/90 border border-slate-700/80 px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm leading-relaxed transition resize-y"
+              class="w-full bg-surface-container-lowest/90 text-on-surface font-sans text-sm rounded-xl p-4 border border-white/10 focus:border-secondary focus:ring-1 focus:ring-secondary/50 focus:outline-none transition-all placeholder:text-slate-500 leading-relaxed resize-none"
               placeholder="e.g. I am interested in AI agents, LangChain4j, Loop Engineering, and modern Java virtual threads..."
               required
             ></textarea>
           </div>
 
-          <!-- Suggested Chips -->
+          <!-- Quick Context Expansion Pills -->
           <div class="space-y-2">
-            <span class="text-xs font-medium text-slate-400">Quick ideas:</span>
-            <div class="flex flex-wrap gap-2" id="promptChips">
-              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+            <span class="text-xs font-mono text-on-surface-variant">Quick Injection Tokens:</span>
+            <div class="flex flex-wrap gap-2 pt-1" id="promptChips">
+              <button type="button" class="chip-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container/20 border border-primary/40 text-primary font-mono text-xs hover:bg-primary-container/30 transition-colors"
                 data-prompt="I'm interested in AI agents, Generative AI, LLM evaluation, LangChain4j, and loop engineering.">
-                <span>🤖</span> AI Agents & GenAI
+                <span>🤖</span> + AI Agents &amp; GenAI
               </button>
-              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+              <button type="button" class="chip-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary-container/25 border border-secondary/40 text-secondary font-mono text-xs hover:bg-secondary-container/35 transition-colors"
                 data-prompt="A schedule focused on the Java language, latest features, Project Loom virtual threads, Valhalla, Amber, and best practices.">
-                <span>☕</span> Java Language & JVM
+                <span>☕</span> + Java Language &amp; Loom
               </button>
-              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+              <button type="button" class="chip-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-white/20 font-mono text-xs transition-colors"
                 data-prompt="A geeky agenda with fun, entertaining, surprising topics like robotics, Raspberry Pi, game engines, and space computing.">
-                <span>🕹️</span> Mind the Geek & Quirky
+                <span>🕹️</span> + Mind the Geek &amp; Quirky
               </button>
-              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+              <button type="button" class="chip-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-white/20 font-mono text-xs transition-colors"
                 data-prompt="Modern enterprise architecture, modular monoliths, distributed systems, event-driven design, and guardrails.">
-                <span>🏛️</span> Architecture & Modernization
+                <span>🏛️</span> + Architecture &amp; Modernization
               </button>
-              <button type="button" class="chip-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5"
+              <button type="button" class="chip-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-white/20 font-mono text-xs transition-colors"
                 data-prompt="Cloud-native Java, Kubernetes platforms, container hardening, vector databases, and GPU infrastructure.">
-                <span>☁️</span> Cloud Native & Kubernetes
+                <span>☁️</span> + Cloud Native &amp; K8s
               </button>
             </div>
           </div>
 
-          <div class="pt-2 flex items-center justify-between">
-            <p class="text-xs text-slate-500">
-              Evaluated by Agent 1 (Safety Guardrail) ➔ Agent 2 (Schedule Optimizer)
-            </p>
+          <!-- Controls Row & Execution Trigger Button -->
+          <div class="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-xs font-mono text-on-surface-variant">
+              <span class="material-symbols-outlined text-primary text-[16px]" data-icon="verified_user">verified_user</span>
+              <span>Guardrail Agent ➔ Session Indexer ➔ Schedule Optimizer</span>
+            </div>
+
             <button
               type="submit"
               id="submitBtn"
-              class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-medium text-sm shadow-lg shadow-orange-500/25 transition transform active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+              class="primary-btn-gradient text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:pointer-events-none group"
             >
-              <svg id="btnIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+              <span class="material-symbols-outlined text-white text-[18px] group-hover:rotate-12 transition-transform" data-icon="bolt">bolt</span>
               <span>Build My Schedule</span>
+              <span class="material-symbols-outlined text-white text-[16px]" data-icon="arrow_forward">arrow_forward</span>
             </button>
           </div>
         </form>
-      </section>
+      </div>
+    </section>
 
-      <!-- Agent Workflow Status Bar (Hidden until active) -->
-      <section id="agentWorkflowStatus" class="hidden glass rounded-xl p-5 border border-slate-800 transition-all duration-300 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Live Agentic Execution</span>
+    <!-- Multi-Agent Live Execution Status Pipeline (Hidden until active) -->
+    <section id="agentWorkflowStatus" class="hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-[20px]" data-icon="account_tree">account_tree</span>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-white">Agentic Workflow Pipeline Telemetry</h2>
+        </div>
+        <!-- Telemetry Stats Ticker -->
+        <div class="flex items-center gap-3 text-xs font-mono text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-white/5">
+          <span id="totalTimer" class="text-primary font-semibold">Elapsed: 0.0s</span>
+          <span class="text-white/20">•</span>
+          <span>Model: <strong class="text-tertiary">Gemini 3.8 Flash</strong></span>
+          <span class="text-white/20">•</span>
+          <span>Conflict Loss: <strong class="text-emerald-400">0.00%</strong></span>
+        </div>
+      </div>
+
+      <!-- 3-Stage Pipeline Sequence Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+        <!-- Stage 1 -->
+        <div id="stepAgent1" class="glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+              <span id="agent1Dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+              Stage 01 • Guardrail
+            </span>
+            <span id="agent1Timer" class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10">--</span>
           </div>
-          <div id="totalTimer" class="text-xs font-mono text-slate-400 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">
-            Elapsed: 0.0s
-          </div>
+          <h3 class="text-sm font-bold text-white mb-1">Guardrail Validator</h3>
+          <p id="agent1Subtext" class="text-xs text-on-surface-variant">Safety, prompt sanitization &amp; injection defenses.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <!-- Step 1: Agent 1 Guardrail -->
-          <div id="stepAgent1" class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <span id="agent1Dot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
-              <div>
-                <div class="text-xs font-semibold text-slate-200">1. Guardrail Validator</div>
-                <div id="agent1Subtext" class="text-[11px] text-slate-500">Safety & relevance check</div>
-              </div>
+        <!-- Stage 2 -->
+        <div id="stepCatalog" class="glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+              <span id="catalogDot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+              Stage 02 • Retrieval
+            </span>
+            <span id="catalogTimer" class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10">--</span>
+          </div>
+          <h3 class="text-sm font-bold text-white mb-1">Catalog Indexer</h3>
+          <p id="catalogSubtext" class="text-xs text-on-surface-variant">Searching 201 Devoxx Belgium sessions.</p>
+        </div>
+
+        <!-- Stage 3 -->
+        <div id="stepAgent2" class="glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-xs font-mono uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+              <span id="agent2Dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+              Stage 03 • Synthesis
+            </span>
+            <span id="agent2Timer" class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10">--</span>
+          </div>
+          <h3 class="text-sm font-bold text-white mb-1">Schedule Optimizer</h3>
+          <p id="agent2Subtext" class="text-xs text-on-surface-variant">Gemini 3.8 Flash conflict-free reasoning.</p>
+        </div>
+      </div>
+
+      <!-- Live Stream Status Subtext -->
+      <div class="p-3 rounded-xl bg-surface-container-low/70 border border-white/5 flex items-center gap-2.5 text-xs text-on-surface-variant">
+        <span class="material-symbols-outlined text-primary text-[18px] animate-spin shrink-0" data-icon="sync">sync</span>
+        <span id="statusMessage" class="font-mono text-on-surface truncate">Initializing agentic pipeline...</span>
+      </div>
+    </section>
+
+    <!-- Error / Rejection Card (Hidden by default) -->
+    <section id="rejectionCard" class="hidden glass-base rounded-2xl p-6 border border-rose-500/40 bg-rose-950/20 space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-300 flex-shrink-0">
+          <span class="material-symbols-outlined text-[24px]" data-icon="shield_alert">shield_alert</span>
+        </div>
+        <div class="space-y-1 flex-1">
+          <h3 class="text-base font-bold text-rose-200">Request Flagged by Guardrail Agent</h3>
+          <p id="rejectionReason" class="text-sm text-rose-300/90 leading-relaxed"></p>
+        </div>
+      </div>
+      <div class="pt-2 border-t border-rose-900/40 text-xs text-slate-400 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[16px] text-primary" data-icon="tips_and_updates">tips_and_updates</span>
+        <span>Tip: Try choosing one of the prompt chips above or specify concrete software topics.</span>
+      </div>
+    </section>
+
+    <!-- Results Section (Hidden until schedule generated) -->
+    <section id="resultsSection" class="hidden space-y-6 pt-2">
+
+      <!-- Section Header & Scoring Ribbon -->
+      <div class="glass-base rounded-2xl p-6 border border-white/10 space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
+          <div>
+            <div class="flex items-center gap-3">
+              <h2 id="scheduleTheme" class="text-xl sm:text-2xl font-bold text-white tracking-tight"></h2>
+              <span id="matchScoreBadge" class="px-3 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/30 text-xs font-mono font-semibold">
+                98.4% Match
+              </span>
             </div>
-            <span id="agent1Timer" class="text-xs font-mono text-slate-400">--</span>
+            <p class="text-xs font-mono text-on-surface-variant mt-1">Generated via Autonomous Engine: LangChain4j + Gemini 3.8 Flash reasoning</p>
           </div>
 
-          <!-- Step 2: Catalog Search & Tools -->
-          <div id="stepCatalog" class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <span id="catalogDot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
-              <div>
-                <div class="text-xs font-semibold text-slate-200">2. Catalog & Tools</div>
-                <div id="catalogSubtext" class="text-[11px] text-slate-500">Indexing sessions</div>
-              </div>
-            </div>
-            <span id="catalogTimer" class="text-xs font-mono text-slate-400">--</span>
-          </div>
-
-          <!-- Step 3: Agent 2 Schedule Optimizer -->
-          <div id="stepAgent2" class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <span id="agent2Dot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
-              <div>
-                <div class="text-xs font-semibold text-slate-200">3. Schedule Optimizer</div>
-                <div id="agent2Subtext" class="text-[11px] text-slate-500">Gemini 3.8 Flash synthesis</div>
-              </div>
-            </div>
-            <span id="agent2Timer" class="text-xs font-mono text-slate-400">--</span>
+          <!-- Quick Action Bar -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="copyMarkdownBtn" class="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-variant text-xs font-mono text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+              <span class="material-symbols-outlined text-[16px]" data-icon="terminal">terminal</span>
+              <span>Copy Markdown</span>
+            </button>
+            <button id="exportIcsBtn" class="px-3 py-2 rounded-lg bg-primary-container/20 hover:bg-primary-container/30 text-xs font-mono text-primary border border-primary/40 flex items-center gap-1.5 transition-colors">
+              <span class="material-symbols-outlined text-[16px]" data-icon="calendar_month">calendar_month</span>
+              <span>Export Calendar (.ics)</span>
+            </button>
+            <button id="printBtn" class="p-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-white/10 transition-colors" title="Print Agenda">
+              <span class="material-symbols-outlined text-[18px]" data-icon="print">print</span>
+            </button>
           </div>
         </div>
 
-        <div class="pt-1 flex items-center gap-2 text-xs text-slate-400 border-t border-slate-800/60">
-          <svg class="w-3.5 h-3.5 text-orange-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span id="statusMessage" class="font-mono text-slate-300 truncate">Initializing agentic pipeline...</span>
-        </div>
-      </section>
-
-      <!-- Error / Rejection Card (Hidden by default) -->
-      <section id="rejectionCard" class="hidden glass rounded-2xl p-6 border border-rose-800/60 bg-rose-950/20 space-y-4">
-        <div class="flex items-start gap-4">
-          <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 flex-shrink-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div class="space-y-1 flex-1">
-            <h3 class="text-base font-semibold text-rose-200">Request Flagged by Guardrail Agent</h3>
-            <p id="rejectionReason" class="text-sm text-rose-300/90 leading-relaxed"></p>
-          </div>
-        </div>
-        <div class="pt-2 border-t border-rose-900/40 text-xs text-slate-400 flex items-center gap-2">
-          <span>💡 Tip: Try choosing one of the prompt chips above or specify concrete software topics.</span>
-        </div>
-      </section>
-
-      <!-- Results Section (Hidden until schedule generated) -->
-      <section id="resultsSection" class="hidden space-y-6">
-
-        <!-- Theme Header Card -->
-        <div class="glass rounded-2xl p-6 border border-slate-800 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800/80">
-            <div>
-              <span class="text-xs font-semibold uppercase tracking-wider text-orange-400">Curated Agenda</span>
-              <h2 id="scheduleTheme" class="text-2xl font-bold text-white tracking-tight"></h2>
-            </div>
-            <div class="flex items-center gap-2">
-              <button id="copyMarkdownBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
-                <span>Copy Markdown</span>
-              </button>
-              <button id="printBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 transition flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                <span>Print</span>
-              </button>
-            </div>
-          </div>
-          <p id="scheduleOverview" class="text-sm text-slate-300 leading-relaxed"></p>
+        <!-- AI Reasoning Summary Banner -->
+        <div class="p-3.5 rounded-xl bg-secondary-container/15 border border-secondary/30 flex items-start gap-3">
+          <span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5" data-icon="psychology">psychology</span>
+          <p id="scheduleOverview" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
         </div>
 
-        <!-- Day Filter Tabs -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800/80 text-sm font-medium" id="dayTabsContainer">
-          <!-- Populated dynamically via JS -->
+        <!-- Day Selector Tab Bar -->
+        <div class="flex items-center gap-2 overflow-x-auto pt-2 scrollbar-none" id="dayTabsContainer">
+          <!-- Populated dynamically by JS -->
         </div>
+      </div>
 
-        <!-- Timetable Agenda Grid -->
-        <div id="agendaCardsContainer" class="space-y-4">
-          <!-- Populated dynamically via JS -->
-        </div>
-      </section>
-    </main>
+      <!-- Rich Session Timetable Cards Container -->
+      <div id="agendaCardsContainer" class="space-y-4">
+        <!-- Populated dynamically by JS -->
+      </div>
+    </section>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-      <p>Devoxx Belgium 2026 AI Schedule Curator • Built with Micronaut & LangChain4j Agentic System</p>
-    </footer>
-  </div>
+  </main>
 
+  <!-- Footer -->
+  <footer class="w-full px-4 sm:px-8 py-8 flex flex-col sm:flex-row justify-between items-center gap-4 bg-surface-container-lowest border-t border-white/10 mt-20 relative z-10 text-xs text-on-surface-variant font-mono">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+      <span>Devoxx Belgium 2026 AI Schedule Curator • Powered by Gemini 3.8 Flash &amp; LangChain4j</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span>Oct 5–9, 2026</span>
+      <span>•</span>
+      <span>Kinepolis Antwerp</span>
+    </div>
+  </footer>
+
+  <!-- Application Logic & SSE Streaming -->
   <script>
     let currentScheduleData = null;
     let activeDayFilter = 'all';
@@ -298,8 +415,10 @@
     const scheduleForm = document.getElementById('scheduleForm');
     const interestsInput = document.getElementById('interestsInput');
     const submitBtn = document.getElementById('submitBtn');
+
     const agentWorkflowStatus = document.getElementById('agentWorkflowStatus');
     const totalTimer = document.getElementById('totalTimer');
+
     const stepAgent1 = document.getElementById('stepAgent1');
     const agent1Dot = document.getElementById('agent1Dot');
     const agent1Subtext = document.getElementById('agent1Subtext');
@@ -318,12 +437,14 @@
     const statusMessage = document.getElementById('statusMessage');
     const rejectionCard = document.getElementById('rejectionCard');
     const rejectionReason = document.getElementById('rejectionReason');
+
     const resultsSection = document.getElementById('resultsSection');
     const scheduleTheme = document.getElementById('scheduleTheme');
     const scheduleOverview = document.getElementById('scheduleOverview');
     const dayTabsContainer = document.getElementById('dayTabsContainer');
     const agendaCardsContainer = document.getElementById('agendaCardsContainer');
     const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
+    const exportIcsBtn = document.getElementById('exportIcsBtn');
     const printBtn = document.getElementById('printBtn');
 
     // Quick chip clicks
@@ -337,83 +458,74 @@
     function resetStepStyles() {
       totalTimer.textContent = "Elapsed: 0.0s";
 
-      stepAgent1.className = "p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between";
-      agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+      stepAgent1.className = "glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden";
+      agent1Dot.className = "w-2 h-2 rounded-full bg-slate-600";
       agent1Timer.textContent = "--";
-      agent1Timer.className = "text-xs font-mono text-slate-400";
-      agent1Subtext.textContent = "Safety & relevance check";
-      agent1Subtext.className = "text-[11px] text-slate-500";
+      agent1Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10";
+      agent1Subtext.textContent = "Safety, prompt sanitization & injection defenses.";
 
-      stepCatalog.className = "p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between";
-      catalogDot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+      stepCatalog.className = "glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden";
+      catalogDot.className = "w-2 h-2 rounded-full bg-slate-600";
       catalogTimer.textContent = "--";
-      catalogTimer.className = "text-xs font-mono text-slate-400";
-      catalogSubtext.textContent = "Indexing sessions";
-      catalogSubtext.className = "text-[11px] text-slate-500";
+      catalogTimer.className = "px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10";
+      catalogSubtext.textContent = "Searching 201 Devoxx Belgium sessions.";
 
-      stepAgent2.className = "p-3 rounded-lg bg-slate-900/80 border border-slate-800 transition-all flex items-center justify-between";
-      agent2Dot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+      stepAgent2.className = "glass-base rounded-xl p-5 border border-white/10 transition-all relative overflow-hidden";
+      agent2Dot.className = "w-2 h-2 rounded-full bg-slate-600";
       agent2Timer.textContent = "--";
-      agent2Timer.className = "text-xs font-mono text-slate-400";
-      agent2Subtext.textContent = "Gemini 3.8 Flash synthesis";
-      agent2Subtext.className = "text-[11px] text-slate-500";
+      agent2Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-on-surface-variant border border-white/10";
+      agent2Subtext.textContent = "Gemini 3.8 Flash conflict-free reasoning.";
     }
 
     function setStepActive(stepId, text) {
       if (stepId === 'agent1') {
-        stepAgent1.className = "p-3 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-200 transition-all flex items-center justify-between shadow-lg shadow-amber-500/5";
-        agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
-        agent1Subtext.textContent = text || "Validating prompt...";
-        agent1Subtext.className = "text-[11px] text-amber-300/90";
+        stepAgent1.className = "glass-base rounded-xl p-5 border border-primary/50 relative overflow-hidden bg-primary/5 shadow-lg shadow-primary/5";
+        agent1Dot.className = "w-2 h-2 rounded-full bg-primary-container beacon-pulse";
+        agent1Subtext.textContent = text || "Validating prompt safety & relevance...";
       } else if (stepId === 'catalog') {
-        stepCatalog.className = "p-3 rounded-lg bg-blue-500/10 border border-blue-500/40 text-blue-200 transition-all flex items-center justify-between shadow-lg shadow-blue-500/5";
-        catalogDot.className = "w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse";
-        catalogSubtext.textContent = text || "Searching catalog...";
-        catalogSubtext.className = "text-[11px] text-blue-300/90";
+        stepCatalog.className = "glass-base rounded-xl p-5 border border-tertiary/50 relative overflow-hidden bg-tertiary/5 shadow-lg shadow-tertiary/5";
+        catalogDot.className = "w-2 h-2 rounded-full bg-tertiary animate-ping";
+        catalogSubtext.textContent = text || "Querying session catalog...";
       } else if (stepId === 'agent2') {
-        stepAgent2.className = "p-3 rounded-lg bg-orange-500/10 border border-orange-500/40 text-orange-200 transition-all flex items-center justify-between shadow-lg shadow-orange-500/5";
-        agent2Dot.className = "w-2.5 h-2.5 rounded-full bg-orange-400 animate-ping";
-        agent2Subtext.textContent = text || "Synthesizing schedule...";
-        agent2Subtext.className = "text-[11px] text-orange-300/90";
+        stepAgent2.className = "glass-base rounded-xl p-5 border border-primary/50 relative overflow-hidden bg-primary/5 shadow-lg shadow-primary/5";
+        agent2Dot.className = "w-2 h-2 rounded-full bg-primary-container beacon-pulse";
+        agent2Subtext.textContent = text || "Gemini 3.8 Flash synthesizing timetable...";
       }
     }
 
     function setStepComplete(stepId, durationText, subtext) {
       if (stepId === 'agent1') {
-        stepAgent1.className = "p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 transition-all flex items-center justify-between";
-        agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+        stepAgent1.className = "glass-base rounded-xl p-5 border border-emerald-500/40 relative overflow-hidden bg-emerald-950/20";
+        agent1Dot.className = "w-2 h-2 rounded-full bg-emerald-400";
         agent1Timer.textContent = `✓ ${durationText}`;
-        agent1Timer.className = "text-xs font-mono font-semibold text-emerald-400";
+        agent1Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold";
         if (subtext) agent1Subtext.textContent = subtext;
-        agent1Subtext.className = "text-[11px] text-emerald-400/80";
       } else if (stepId === 'catalog') {
-        stepCatalog.className = "p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 transition-all flex items-center justify-between";
-        catalogDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+        stepCatalog.className = "glass-base rounded-xl p-5 border border-tertiary/40 relative overflow-hidden bg-tertiary/10";
+        catalogDot.className = "w-2 h-2 rounded-full bg-tertiary";
         catalogTimer.textContent = `✓ ${durationText}`;
-        catalogTimer.className = "text-xs font-mono font-semibold text-emerald-400";
+        catalogTimer.className = "px-2 py-0.5 rounded text-xs font-mono bg-tertiary/10 text-tertiary border border-tertiary/30 font-semibold";
         if (subtext) catalogSubtext.textContent = subtext;
-        catalogSubtext.className = "text-[11px] text-emerald-400/80";
       } else if (stepId === 'agent2') {
-        stepAgent2.className = "p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 transition-all flex items-center justify-between";
-        agent2Dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+        stepAgent2.className = "glass-base rounded-xl p-5 border border-emerald-500/40 relative overflow-hidden bg-emerald-950/20";
+        agent2Dot.className = "w-2 h-2 rounded-full bg-emerald-400";
         agent2Timer.textContent = `✓ ${durationText}`;
-        agent2Timer.className = "text-xs font-mono font-semibold text-emerald-400";
+        agent2Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold";
         if (subtext) agent2Subtext.textContent = subtext;
-        agent2Subtext.className = "text-[11px] text-emerald-400/80";
       }
     }
 
     function setStepFailed(stepId, reason) {
       if (stepId === 'agent1') {
-        stepAgent1.className = "p-3 rounded-lg bg-rose-950/50 border border-rose-500/50 text-rose-200 transition-all flex items-center justify-between";
-        agent1Dot.className = "w-2.5 h-2.5 rounded-full bg-rose-400";
-        agent1Timer.textContent = "✕ Rejected";
-        agent1Timer.className = "text-xs font-mono font-semibold text-rose-400";
-        agent1Subtext.textContent = "Validation rejected";
-        agent1Subtext.className = "text-[11px] text-rose-400";
+        stepAgent1.className = "glass-base rounded-xl p-5 border border-rose-500/50 bg-rose-950/30 relative overflow-hidden";
+        agent1Dot.className = "w-2 h-2 rounded-full bg-rose-400";
+        agent1Timer.textContent = "✕ Flagged";
+        agent1Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold";
+        agent1Subtext.textContent = "Validation rejected prompt.";
       }
     }
 
+    // Submit handler with Server-Sent Events (SSE) streaming
     scheduleForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const interests = interestsInput.value.trim();
@@ -431,7 +543,7 @@
       let a1StartTime = startTime;
       let a2StartTime = null;
       let catalogStartTime = null;
-      let activeStep = 1; // 1: Agent 1, 2: Catalog, 3: Agent 2
+      let activeStep = 1;
 
       const timerInterval = setInterval(() => {
         const now = Date.now();
@@ -447,10 +559,10 @@
         }
       }, 100);
 
-      setStepActive('agent1', 'Evaluating prompt safety & relevance...');
+      setStepActive('agent1', 'Analyzing prompt safety & relevance...');
       statusMessage.textContent = 'Agent 1: Guardrail Validator initializing...';
 
-      // Connect to Server-Sent Events stream
+      // Connect to SSE stream
       const streamUrl = `/api/schedule/stream?interests=${encodeURIComponent(interests)}`;
       const eventSource = new EventSource(streamUrl);
 
@@ -513,7 +625,7 @@
 
           case 'agent2_done':
             const a2Sec = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : agent2Timer.textContent;
-            setStepComplete('agent2', a2Sec, '5-day agenda synthesized');
+            setStepComplete('agent2', a2Sec, 'Conflict-free agenda curated');
             break;
 
           case 'complete':
@@ -521,12 +633,12 @@
             eventSource.close();
             submitBtn.disabled = false;
             const finalSec = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : totalTimer.textContent;
-            totalTimer.textContent = `Total time: ${finalSec}`;
+            totalTimer.textContent = `Total: ${finalSec}`;
             currentScheduleData = data.schedule;
 
             setTimeout(() => {
               renderResults(data.schedule);
-            }, 500);
+            }, 400);
             break;
 
           case 'rejected':
@@ -549,7 +661,7 @@
       }
 
       scheduleTheme.textContent = data.theme || "Personalized Devoxx Belgium 2026 Schedule";
-      scheduleOverview.textContent = data.overview || "Here is your curated, conflict-free conference agenda.";
+      scheduleOverview.innerHTML = `<strong class="font-semibold text-white">AI Reasoning Summary:</strong> ${escapeHtml(data.overview || "Curated conflict-free conference itinerary tailored to your exact topics.")}`;
 
       renderDayTabs(data.days || []);
       renderAgenda(data.days || []);
@@ -561,8 +673,13 @@
       dayTabsContainer.innerHTML = '';
 
       const allBtn = document.createElement('button');
-      allBtn.className = `px-4 py-2 rounded-lg transition whitespace-nowrap ${activeDayFilter === 'all' ? 'bg-orange-600 text-white font-semibold shadow' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`;
-      allBtn.textContent = `🌟 Full Week (${getTotalTalks(days)})`;
+      const isAllActive = activeDayFilter === 'all';
+      allBtn.className = `px-4 py-2 rounded-lg text-xs font-mono transition whitespace-nowrap ${
+        isAllActive
+          ? 'bg-primary-container/20 text-primary border border-primary/50 font-semibold'
+          : 'text-on-surface-variant hover:text-white bg-surface-container/60 border border-white/5'
+      }`;
+      allBtn.innerHTML = `🌟 Full Week (${getTotalTalks(days)} sessions)`;
       allBtn.onclick = () => {
         activeDayFilter = 'all';
         renderDayTabs(days);
@@ -573,8 +690,12 @@
       days.forEach(d => {
         const btn = document.createElement('button');
         const isActive = activeDayFilter === d.day;
-        btn.className = `px-4 py-2 rounded-lg transition whitespace-nowrap ${isActive ? 'bg-orange-600 text-white font-semibold shadow' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`;
-        btn.textContent = `${capitalize(d.day)} (${(d.talks || []).length})`;
+        btn.className = `px-4 py-2 rounded-lg text-xs font-mono transition whitespace-nowrap ${
+          isActive
+            ? 'bg-primary-container/20 text-primary border border-primary/50 font-semibold'
+            : 'text-on-surface-variant hover:text-white bg-surface-container/60 border border-white/5'
+        }`;
+        btn.innerHTML = `${capitalize(d.day)} (${(d.talks || []).length})`;
         btn.onclick = () => {
           activeDayFilter = d.day;
           renderDayTabs(days);
@@ -591,13 +712,13 @@
     function renderAgenda(days) {
       agendaCardsContainer.innerHTML = '';
 
-      const filteredDays = activeDayFilter === 'all' 
-        ? days 
+      const filteredDays = activeDayFilter === 'all'
+        ? days
         : days.filter(d => d.day === activeDayFilter);
 
       if (filteredDays.length === 0 || getTotalTalks(filteredDays) === 0) {
         agendaCardsContainer.innerHTML = `
-          <div class="glass p-8 text-center rounded-2xl text-slate-400">
+          <div class="glass-base p-8 text-center rounded-2xl text-on-surface-variant text-sm font-mono">
             No scheduled talks for this filter.
           </div>
         `;
@@ -609,64 +730,71 @@
         daySection.className = "space-y-3 pt-2";
 
         const dayHeader = document.createElement('div');
-        dayHeader.className = "flex items-center gap-2 text-sm font-bold text-slate-200";
+        dayHeader.className = "flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-primary";
         dayHeader.innerHTML = `
-          <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-          <span>${d.dayLabel || (capitalize(d.day) + ' - ' + d.date)}</span>
-          <span class="text-xs font-normal text-slate-500">(${(d.talks || []).length} sessions)</span>
+          <span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+          <span>${d.dayLabel || (capitalize(d.day) + ' • ' + d.date)}</span>
+          <span class="text-[11px] font-normal text-on-surface-variant">(${(d.talks || []).length} sessions)</span>
         `;
         daySection.appendChild(dayHeader);
 
         const talksList = document.createElement('div');
-        talksList.className = "grid gap-3";
+        talksList.className = "grid gap-3.5";
 
         (d.talks || []).forEach(talk => {
           const card = document.createElement('div');
-          card.className = "glass-card rounded-xl p-5 hover:border-slate-700 transition flex flex-col md:flex-row md:items-start justify-between gap-4";
+          card.className = "glass-surface-2 rounded-2xl p-6 border border-white/10 hover:border-secondary/40 transition-all space-y-4";
 
-          const trackBadgeColor = getTrackColor(talk.track);
-          const typeBadgeColor = getSessionTypeColor(talk.sessionType);
+          const trackBadge = getTrackBadge(talk.track);
+          const typeBadge = getSessionTypeBadge(talk.sessionType);
 
           card.innerHTML = `
-            <div class="flex-shrink-0 md:w-44 space-y-1.5">
-              <div class="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-slate-200 bg-slate-900/90 px-2.5 py-1 rounded-md border border-slate-700/60">
-                <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>${talk.startTime} – ${talk.endTime}</span>
-              </div>
-              <div class="text-xs font-medium text-slate-400 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>Room: <strong class="text-slate-300 font-semibold">${talk.room || 'TBA'}</strong></span>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2.5">
+                <span class="font-mono text-sm font-bold text-white flex items-center gap-1.5 bg-surface-container-lowest/80 px-2.5 py-1 rounded-md border border-white/10">
+                  <span class="material-symbols-outlined text-primary text-[16px]" data-icon="schedule">schedule</span>
+                  ${escapeHtml(talk.startTime)} – ${escapeHtml(talk.endTime)}
+                </span>
+                <span class="text-white/20">•</span>
+                <span class="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs font-mono text-on-surface flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px] text-tertiary" data-icon="room">room</span>
+                  ${escapeHtml(talk.room || 'TBA')}
+                </span>
+                ${typeBadge}
               </div>
               <div>
-                <span class="inline-block px-2 py-0.5 text-[11px] font-medium rounded-full ${typeBadgeColor}">
-                  ${talk.sessionType || 'Conference'}
-                </span>
+                ${trackBadge}
               </div>
             </div>
 
-            <div class="flex-1 space-y-2">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-block px-2.5 py-0.5 text-xs font-medium rounded-md ${trackBadgeColor}">
-                  ${talk.track || 'General'}
-                </span>
-              </div>
-              <h3 class="text-base font-bold text-white tracking-tight leading-snug">
+            <div class="space-y-1.5">
+              <h3 class="text-base sm:text-lg font-bold text-white leading-snug tracking-tight">
                 ${escapeHtml(talk.title)}
               </h3>
-              <p class="text-xs text-slate-300">
-                <strong class="text-slate-400">Speaker(s):</strong> ${escapeHtml(talk.speakers || 'TBA')}
+              <p class="text-xs sm:text-sm text-on-surface-variant flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px] text-tertiary shrink-0" data-icon="person">person</span>
+                <span><strong>${escapeHtml(talk.speakers || 'TBA')}</strong></span>
               </p>
-              ${talk.reason ? `
-                <div class="mt-2 text-xs bg-orange-950/20 border border-orange-500/20 rounded-lg p-2.5 text-orange-200/90 flex items-start gap-2">
-                  <span class="text-orange-400 flex-shrink-0">💡</span>
-                  <span class="leading-relaxed"><strong>Why this talk:</strong> ${escapeHtml(talk.reason)}</span>
+            </div>
+
+            ${talk.reason ? `
+              <div class="glass-highlight rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-on-surface leading-relaxed">
+                <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" data-icon="smart_toy">smart_toy</span>
+                <div>
+                  <strong class="text-primary font-semibold">Why this talk was chosen for you:</strong> ${escapeHtml(talk.reason)}
                 </div>
-              ` : ''}
+              </div>
+            ` : ''}
+
+            <div class="flex items-center justify-between pt-1 border-t border-white/5">
+              <div class="flex items-center gap-2">
+                <button type="button" class="bookmark-btn px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
+                  onclick="toggleBookmark(this)">
+                  <span class="material-symbols-outlined text-[15px]" data-icon="bookmark_add">bookmark_add</span>
+                  <span>Save</span>
+                </button>
+              </div>
+              <span class="text-[11px] font-mono text-on-surface-variant/60">Session ID: #${talk.talkId}</span>
             </div>
           `;
           talksList.appendChild(card);
@@ -677,42 +805,50 @@
       });
     }
 
-    function getTrackColor(track) {
-      if (!track) return "bg-slate-800 text-slate-300 border border-slate-700";
-      const t = track.toLowerCase();
-      if (t.includes('agentic') || t.includes('tooling') || t.includes('ai')) {
-        return "bg-purple-950/60 text-purple-300 border border-purple-800/60";
+    function toggleBookmark(btn) {
+      const isSaved = btn.getAttribute('data-saved') === 'true';
+      if (isSaved) {
+        btn.setAttribute('data-saved', 'false');
+        btn.className = "bookmark-btn px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5";
+        btn.innerHTML = `<span class="material-symbols-outlined text-[15px]" data-icon="bookmark_add">bookmark_add</span><span>Save</span>`;
+      } else {
+        btn.setAttribute('data-saved', 'true');
+        btn.className = "bookmark-btn px-2.5 py-1 rounded-lg bg-primary-container/20 border border-primary/40 text-xs font-mono text-primary transition flex items-center gap-1.5";
+        btn.innerHTML = `<span class="material-symbols-outlined text-[15px] text-primary" data-icon="bookmark_added">bookmark_added</span><span>Saved</span>`;
       }
-      if (t.includes('java')) {
-        return "bg-amber-950/60 text-amber-300 border border-amber-800/60";
-      }
-      if (t.includes('mind the geek')) {
-        return "bg-pink-950/60 text-pink-300 border border-pink-800/60";
-      }
-      if (t.includes('cloud') || t.includes('infrastructure')) {
-        return "bg-cyan-950/60 text-cyan-300 border border-cyan-800/60";
-      }
-      if (t.includes('architecture') || t.includes('modernization')) {
-        return "bg-blue-950/60 text-blue-300 border border-blue-800/60";
-      }
-      if (t.includes('security') || t.includes('compliance')) {
-        return "bg-red-950/60 text-red-300 border border-red-800/60";
-      }
-      if (t.includes('practice') || t.includes('development')) {
-        return "bg-emerald-950/60 text-emerald-300 border border-emerald-800/60";
-      }
-      return "bg-slate-800 text-slate-300 border border-slate-700";
     }
 
-    function getSessionTypeColor(type) {
-      if (!type) return "bg-slate-800 text-slate-300";
+    function getTrackBadge(track) {
+      if (!track) return `<span class="px-2.5 py-0.5 rounded-full bg-white/5 text-slate-300 border border-white/10 text-[11px] font-mono">General</span>`;
+      const t = track.toLowerCase();
+      if (t.includes('agentic') || t.includes('tooling') || t.includes('ai')) {
+        return `<span class="px-2.5 py-0.5 rounded-full bg-secondary-container/25 text-secondary border border-secondary/40 text-[11px] font-mono font-medium">${escapeHtml(track)}</span>`;
+      }
+      if (t.includes('java')) {
+        return `<span class="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary border border-primary/40 text-[11px] font-mono font-medium">${escapeHtml(track)}</span>`;
+      }
+      if (t.includes('mind the geek')) {
+        return `<span class="px-2.5 py-0.5 rounded-full bg-pink-950/40 text-pink-300 border border-pink-700/40 text-[11px] font-mono font-medium">${escapeHtml(track)}</span>`;
+      }
+      if (t.includes('cloud') || t.includes('infrastructure')) {
+        return `<span class="px-2.5 py-0.5 rounded-full bg-tertiary/20 text-tertiary border border-tertiary/40 text-[11px] font-mono font-medium">${escapeHtml(track)}</span>`;
+      }
+      if (t.includes('architecture') || t.includes('modernization')) {
+        return `<span class="px-2.5 py-0.5 rounded-full bg-blue-950/40 text-blue-300 border border-blue-700/40 text-[11px] font-mono font-medium">${escapeHtml(track)}</span>`;
+      }
+      return `<span class="px-2.5 py-0.5 rounded-full bg-emerald-950/40 text-emerald-300 border border-emerald-700/40 text-[11px] font-mono font-medium">${escapeHtml(track)}</span>`;
+    }
+
+    function getSessionTypeBadge(type) {
+      if (!type) return '';
       const s = type.toLowerCase();
-      if (s.includes('deep dive')) return "bg-indigo-900/60 text-indigo-300 border border-indigo-700/50";
-      if (s.includes('keynote')) return "bg-yellow-900/60 text-yellow-300 border border-yellow-700/50";
-      if (s.includes('tools')) return "bg-teal-900/60 text-teal-300 border border-teal-700/50";
-      if (s.includes('bof')) return "bg-purple-900/60 text-purple-300 border border-purple-700/50";
-      if (s.includes('lunch')) return "bg-slate-800 text-slate-300 border border-slate-700";
-      return "bg-slate-800/80 text-slate-300 border border-slate-700/50";
+      let colorClass = "bg-white/5 text-slate-300 border-white/10";
+      if (s.includes('deep dive')) colorClass = "bg-secondary-container/30 text-secondary border-secondary/40";
+      else if (s.includes('keynote')) colorClass = "bg-amber-500/20 text-amber-300 border-amber-500/40";
+      else if (s.includes('lab') || s.includes('hands-on')) colorClass = "bg-tertiary/20 text-tertiary border-tertiary/40";
+      else if (s.includes('tools')) colorClass = "bg-teal-500/20 text-teal-300 border-teal-500/40";
+
+      return `<span class="px-2.5 py-0.5 rounded-md border text-[11px] font-mono ${colorClass}">${escapeHtml(type)}</span>`;
     }
 
     function capitalize(str) {
@@ -747,10 +883,46 @@
       });
 
       navigator.clipboard.writeText(md).then(() => {
-        const origText = copyMarkdownBtn.innerHTML;
-        copyMarkdownBtn.innerHTML = `<span>✓ Copied!</span>`;
-        setTimeout(() => copyMarkdownBtn.innerHTML = origText, 2000);
+        const origHtml = copyMarkdownBtn.innerHTML;
+        copyMarkdownBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400" data-icon="check">check</span><span>Copied!</span>`;
+        setTimeout(() => copyMarkdownBtn.innerHTML = origHtml, 2000);
       });
+    });
+
+    // Calendar Export (.ics)
+    exportIcsBtn.addEventListener('click', () => {
+      if (!currentScheduleData || !currentScheduleData.days) return;
+
+      let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Devoxx Belgium 2026 AI Scheduler//EN\r\nCALSCALE:GREGORIAN\r\n";
+
+      currentScheduleData.days.forEach(d => {
+        (d.talks || []).forEach(t => {
+          const dateClean = (t.date || "2026-10-05").replace(/-/g, "");
+          const startClean = (t.startTime || "09:00").replace(/:/g, "") + "00";
+          const endClean = (t.endTime || "10:00").replace(/:/g, "") + "00";
+
+          ics += "BEGIN:VEVENT\r\n";
+          ics += `UID:devoxx2026-${t.talkId}@devoxx.be\r\n`;
+          ics += `DTSTART;TZID=Europe/Brussels:${dateClean}T${startClean}\r\n`;
+          ics += `DTEND;TZID=Europe/Brussels:${dateClean}T${endClean}\r\n`;
+          ics += `SUMMARY:${(t.title || "Devoxx Talk").replace(/[,;]/g, " ")}\r\n`;
+          ics += `LOCATION:${t.room || "Antwerp Expo"}\r\n`;
+          ics += `DESCRIPTION:Speaker: ${t.speakers || "TBA"}\\nTrack: ${t.track || "General"}\\nWhy it fits: ${(t.reason || "").replace(/[,;]/g, " ")}\r\n`;
+          ics += "END:VEVENT\r\n";
+        });
+      });
+
+      ics += "END:VCALENDAR\r\n";
+
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "devoxx-belgium-2026-schedule.ics";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
 
     // Print Button

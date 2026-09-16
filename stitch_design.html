@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Devoxx Belgium 2026 — AI Schedule Curator</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-surface": "#dfe2f1",
+            "surface-container-low": "#171b26",
+            "primary-container": "#ff6b00",
+            "on-tertiary": "#003640",
+            "primary": "#ffb693",
+            "tertiary-container": "#00a7c3",
+            "outline-variant": "#5a4136",
+            "on-surface-variant": "#e2bfb0",
+            "primary-fixed-dim": "#ffb693",
+            "background": "#0b0f19",
+            "surface-dim": "#0f131d",
+            "on-primary-container": "#572000",
+            "surface-container": "#1c1f2a",
+            "tertiary": "#4cd7f6",
+            "error": "#ffb4ab",
+            "surface-variant": "#313540",
+            "surface-container-high": "#262a35",
+            "secondary-fixed-dim": "#d0bcff",
+            "on-primary-fixed-variant": "#7a3000",
+            "inverse-surface": "#dfe2f1",
+            "error-container": "#93000a",
+            "on-error-container": "#ffdad6",
+            "on-secondary-container": "#c4abff",
+            "on-primary": "#561f00",
+            "on-tertiary-fixed": "#001f26",
+            "secondary-container": "#571bc1",
+            "surface-container-highest": "#313540",
+            "tertiary-fixed": "#acedff",
+            "surface-container-lowest": "#0a0e18",
+            "secondary-fixed": "#e9ddff",
+            "on-background": "#dfe2f1",
+            "on-secondary-fixed": "#23005c",
+            "secondary": "#d0bcff",
+            "surface": "#0f131d",
+            "tertiary-fixed-dim": "#4cd7f6",
+            "surface-tint": "#ffb693",
+            "on-tertiary-fixed-variant": "#004e5c",
+            "inverse-on-surface": "#2c303b",
+            "on-error": "#690005",
+            "surface-bright": "#353944",
+            "primary-fixed": "#ffdbcc",
+            "on-tertiary-container": "#003641",
+            "outline": "#a98a7d",
+            "on-primary-fixed": "#351000",
+            "on-secondary-fixed-variant": "#5516be",
+            "on-secondary": "#3c0091",
+            "inverse-primary": "#a04100"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            "gutter-desktop": "1.5rem",
+            "margin-desktop": "2.5rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "margin-mobile": "1rem",
+            "margin": "1.5rem",
+            "gutter": "1.25rem",
+            "gutter-mobile": "0.75rem",
+            "space-xl": "2.5rem",
+            "space-md": "1rem"
+          },
+          fontFamily: {
+            "body-md": ["Geist", "sans-serif"],
+            "display-xl": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "label-caps": ["JetBrains Mono", "monospace"],
+            "code-md": ["JetBrains Mono", "monospace"],
+            "body-lg": ["Geist", "sans-serif"],
+            "body-sm": ["Geist", "sans-serif"],
+            "display-xl-mobile": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "code-lg": ["JetBrains Mono", "monospace"],
+            "code-sm": ["JetBrains Mono", "monospace"],
+            "headline-lg-mobile": ["Geist", "sans-serif"]
+          },
+          fontSize: {
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.005em", "fontWeight": "400" }],
+            "display-xl": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.005em", "fontWeight": "600" }],
+            "label-caps": ["10px", { "lineHeight": "12px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+            "code-md": ["12px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "500" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+            "display-xl-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "code-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .glass-base {
+      background: rgba(17, 24, 39, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-surface-2 {
+      background: rgba(30, 41, 59, 0.65);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .glass-highlight {
+      background: linear-gradient(135deg, rgba(255, 107, 0, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+      border: 1px solid rgba(255, 107, 0, 0.3);
+    }
+    .primary-btn-gradient {
+      background: linear-gradient(135deg, #FF6B00 0%, #F59E0B 100%);
+      box-shadow: 0 0 20px -3px rgba(255, 107, 0, 0.45);
+    }
+    .primary-btn-gradient:hover {
+      box-shadow: 0 0 28px 0px rgba(255, 107, 0, 0.65);
+      transform: scale(0.985);
+    }
+    .beacon-pulse {
+      box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.7);
+      animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring {
+      to {
+        box-shadow: 0 0 0 10px rgba(255, 107, 0, 0);
+      }
+    }
+    .beacon-emerald {
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+      animation: pulse-ring-emerald 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring-emerald {
+      to {
+        box-shadow: 0 0 0 8px rgba(74, 222, 128, 0);
+      }
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-on-primary">
+<!-- Ambient Obsidian / Violet / Amber Background Glow Mesh -->
+<div class="fixed inset-0 pointer-events-none z-0">
+<div class="absolute -top-[15%] left-[20%] w-[55vw] h-[55vw] rounded-full bg-secondary-container/15 blur-[140px]"></div>
+<div class="absolute top-[25%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-primary-container/10 blur-[160px]"></div>
+<div class="absolute bottom-[10%] left-[5%] w-[40vw] h-[40vw] rounded-full bg-tertiary-container/10 blur-[130px]"></div>
+</div>
+<!-- Shared TopNavBar Component -->
+<header class="w-full px-margin-desktop py-space-sm flex justify-between items-center bg-surface-container-low/80 backdrop-blur-xl border-b border-outline-variant/30 sticky top-0 z-50">
+<!-- Brand Identity & Polygon Logo -->
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-sm cursor-pointer group">
+<div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-lg shadow-primary-container/20 group-hover:scale-105 transition-transform duration-200">
+<span class="material-symbols-outlined text-surface-container-lowest text-[22px] font-bold" data-icon="deployed_code">deployed_code</span>
+</div>
+<div class="flex flex-col">
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface tracking-tight flex items-center gap-2">
+            DEVOXX BELGIUM 2026
+          </span>
+<span class="text-label-caps font-label-caps text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-primary" data-icon="location_on">location_on</span>
+            Oct 5–9 • Antwerp Expo
+          </span>
+</div>
+</div>
+<!-- Live Pipeline & Microservice Telemetry Status Indicators -->
+<div class="hidden xl:flex items-center gap-2.5 pl-space-md border-l border-white/10">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/10 text-code-sm font-code-sm">
+<span class="w-2 h-2 rounded-full bg-emerald-400 beacon-emerald"></span>
+<span class="text-on-surface">Gemini 3.8 Flash • Online</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/25 border border-secondary/30 text-code-sm font-code-sm text-secondary-fixed">
+<span class="material-symbols-outlined text-[13px]" data-icon="memory">memory</span>
+<span>LangChain4j Agentic</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-code-sm font-code-sm text-on-surface-variant">
+<span>Micronaut 5</span>
+</div>
+</div>
+</div>
+<!-- Navigation Links Anchor -->
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-primary font-code-md border-b-2 border-primary pb-1" href="#schedule-matrix">Schedule Matrix</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-code-md" href="#agent-pipeline">Agent Pipeline</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-code-md" href="#catalog-index">Catalog Index</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-code-md" href="#docs">Docs</a>
+</nav>
+<!-- Trailing Actions & Attendee Profile -->
+<div class="flex items-center gap-3">
+<button class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant/40 border border-white/10 text-code-sm font-code-sm text-on-surface transition-all duration-150">
+<span class="material-symbols-outlined text-[16px] text-tertiary" data-icon="terminal">terminal</span>
+<span>Telemetry</span>
+</button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-variant/40 border border-white/10 text-on-surface-variant hover:text-on-surface transition-colors relative">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container"></span>
+</button>
+<!-- Attendee Profile Badge -->
+<div class="flex items-center gap-2 pl-2 border-l border-white/10">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary to-primary-container p-[1px] relative cursor-pointer">
+<div class="w-full h-full bg-surface-container-low rounded-[7px] flex items-center justify-center">
+<span class="text-code-sm font-code-sm font-bold text-primary">SC</span>
+</div>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div class="hidden 2xl:flex flex-col text-left">
+<span class="text-code-sm font-code-sm font-semibold text-on-surface">Staff Concurrency Spec</span>
+<span class="text-label-caps font-label-caps text-secondary">Java Champion / AI Lead</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main View Canvas -->
+<main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+<!-- Hero Section & Architecture Narrative -->
+<section class="text-center max-w-4xl mx-auto space-y-4 pt-4">
+<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary-container/20 border border-secondary/40 text-secondary-fixed text-code-sm font-code-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="auto_awesome">auto_awesome</span>
+<span>Autonomous Multi-Agent Conference Engine</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="text-label-caps font-label-caps opacity-80">v3.8.4</span>
+</div>
+<h1 class="text-headline-lg md:text-display-xl font-display-xl tracking-tight text-white">
+        Craft Your Personal <br class="hidden sm:inline"/>
+<span class="bg-gradient-to-r from-primary via-primary-container to-secondary bg-clip-text text-transparent">
+          Devoxx Belgium 2026 Schedule
+        </span>
+</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+        Harnessing an orchestration of LangChain4j and Gemini 3.8 Flash agents to index 196 talks, resolve room transit conflicts, and tailor a custom technical agenda matching your exact interests.
+      </p>
+</section>
+<!-- Input Console Glass Card -->
+<section class="relative">
+<div class="glass-surface-2 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl border border-white/10">
+<!-- Subtle Top Specular Lighting Flare -->
+<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-primary/20 blur-3xl rounded-full pointer-events-none"></div>
+<div class="space-y-5">
+<div class="flex items-center justify-between">
+<label class="text-label-caps font-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[16px]" data-icon="terminal">terminal</span>
+              Natural Language Conference Agent Prompt
+            </label>
+<div class="flex items-center gap-2 text-code-sm font-code-sm text-on-surface-variant/80">
+<span class="material-symbols-outlined text-[14px] text-tertiary" data-icon="electric_bolt">electric_bolt</span>
+<span>Constrained Synthesizer Active</span>
+</div>
+</div>
+<!-- Interactive Textarea -->
+<div class="relative group">
+<textarea class="w-full bg-surface-container-lowest/80 text-on-surface font-body-md rounded-xl p-4 border border-white/10 focus:border-secondary focus:ring-1 focus:ring-secondary/50 focus:outline-none transition-all placeholder:text-on-surface-variant/40 leading-relaxed resize-none" rows="3">I am a senior Java architect focusing on autonomous AI agents, Loom virtual thread throughput in production, and enterprise LLM security guardrails. Prefer Deep Dives on Monday and hands-on lab architectures on Wednesday.</textarea>
+<div class="absolute bottom-3 right-3 text-label-caps font-label-caps text-on-surface-variant/50">
+              214 / 500 chars
+            </div>
+</div>
+<!-- Quick Context Expansion Pills -->
+<div class="space-y-2">
+<span class="text-label-caps font-label-caps text-on-surface-variant/80">Quick Injection Tokens:</span>
+<div class="flex flex-wrap gap-2 pt-1">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container/20 border border-primary text-primary font-code-sm text-code-sm hover:bg-primary-container/30 transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                + AI Agents &amp; GenAI
+              </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary-container/30 border border-secondary text-secondary-fixed font-code-sm text-code-sm hover:bg-secondary-container/40 transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                + Java &amp; Virtual Threads
+              </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-white/20 font-code-sm text-code-sm transition-colors">
+                + Mind the Geek
+              </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-white/20 font-code-sm text-code-sm transition-colors">
+                + Cloud Native &amp; Kubernetes
+              </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-white/20 font-code-sm text-code-sm transition-colors">
+                + GraalVM &amp; AOT
+              </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-white/10 text-on-surface-variant hover:text-on-surface hover:border-white/20 font-code-sm text-code-sm transition-colors">
+                + LangChain4j Production
+              </button>
+</div>
+</div>
+<!-- Controls Row & Execution Trigger Button -->
+<div class="pt-4 border-t border-white/10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+<div class="flex flex-wrap items-center gap-3">
+<!-- Dropdown 1 -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container border border-white/10 text-code-sm font-code-sm">
+<span class="text-on-surface-variant">Level:</span>
+<span class="text-on-surface font-semibold">Senior / Staff Architect</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+<!-- Transit Switcher -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container border border-white/10 text-code-sm font-code-sm cursor-pointer hover:border-tertiary/40 transition-colors">
+<span class="material-symbols-outlined text-tertiary text-[16px]" data-icon="directions_walk">directions_walk</span>
+<span class="text-on-surface">Transit:</span>
+<span class="text-tertiary font-semibold">Optimal Walking Route</span>
+</div>
+</div>
+<!-- Primary High-Impact CTA -->
+<button class="primary-btn-gradient text-on-surface-lowest px-6 py-3.5 rounded-xl font-headline-sm text-headline-sm font-bold flex items-center justify-center gap-2.5 transition-all group">
+<span class="material-symbols-outlined text-on-primary-container text-[20px] group-hover:rotate-12 transition-transform" data-icon="bolt">bolt</span>
+<span class="text-on-primary-container">Build My Schedule</span>
+<span class="material-symbols-outlined text-on-primary-container text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Multi-Agent Live Execution Status Pipeline -->
+<section class="space-y-4" id="agent-pipeline">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="account_tree">account_tree</span>
+<h2 class="text-headline-sm font-headline-sm text-white">Agentic Workflow Pipeline Telemetry</h2>
+</div>
+<!-- Telemetry Stats Ticker -->
+<div class="flex items-center gap-3 text-label-caps font-label-caps text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-white/5">
+<span>Tokens: <strong class="text-on-surface font-code-sm">42,810</strong></span>
+<span class="text-white/20">•</span>
+<span>Temp: <strong class="text-tertiary font-code-sm">0.2</strong></span>
+<span class="text-white/20">•</span>
+<span>Conflict Loss: <strong class="text-emerald-400 font-code-sm">0.00%</strong></span>
+</div>
+</div>
+<!-- 3-Stage Pipeline Sequence Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+<!-- Stage 1 -->
+<div class="glass-base rounded-xl p-5 border border-emerald-500/30 relative overflow-hidden">
+<div class="flex items-center justify-between mb-3">
+<span class="text-label-caps font-label-caps text-emerald-400 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="verified_user">verified_user</span>
+              Stage 01 • Guardrail
+            </span>
+<span class="px-2 py-0.5 rounded text-code-sm font-code-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2.1s</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-white mb-1">Guardrail Validator</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-4">Safety, prompt sanitization &amp; role compliance enforcement.</p>
+<div class="flex items-center gap-2 text-code-sm font-code-sm text-emerald-400 font-medium">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+<span>Completed Clean</span>
+</div>
+</div>
+<!-- Stage 2 -->
+<div class="glass-base rounded-xl p-5 border border-tertiary/30 relative overflow-hidden">
+<div class="flex items-center justify-between mb-3">
+<span class="text-label-caps font-label-caps text-tertiary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="database">database</span>
+              Stage 02 • Retrieval
+            </span>
+<span class="px-2 py-0.5 rounded text-code-sm font-code-sm bg-tertiary/10 text-tertiary border border-tertiary/20">0.4s</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-white mb-1">Catalog Indexer</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-4">Vector search &amp; cosine similarity across 196 Devoxx talks.</p>
+<div class="flex items-center gap-2 text-code-sm font-code-sm text-tertiary font-medium">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+<span>Indexed 196 Talks</span>
+</div>
+</div>
+<!-- Stage 3 (Active) -->
+<div class="glass-base rounded-xl p-5 border border-primary/50 relative overflow-hidden bg-primary/5">
+<div class="flex items-center justify-between mb-3">
+<span class="text-label-caps font-label-caps text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container beacon-pulse"></span>
+              Stage 03 • Synthesis
+            </span>
+<span class="px-2 py-0.5 rounded text-code-sm font-code-sm bg-primary/10 text-primary border border-primary/30">14.8s / step 4 of 6</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-white mb-1">Schedule Optimizer</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-4">Gemini 3.8 Flash conflict-free reasoning &amp; room transit routing.</p>
+<div class="flex items-center gap-2 text-code-sm font-code-sm text-primary font-medium">
+<span class="material-symbols-outlined text-[16px] animate-spin" data-icon="progress_activity">progress_activity</span>
+<span>Processing Constraints...</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Curated Schedule Timetable View -->
+<section class="space-y-6 pt-4" id="schedule-matrix">
+<!-- Section Header & Scoring Ribbon -->
+<div class="glass-base rounded-2xl p-6 border border-white/10 space-y-4">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
+<div>
+<div class="flex items-center gap-3">
+<h2 class="text-headline-md font-headline-md text-white">Personalized Curation: Autonomous Architect Track</h2>
+<span class="px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/30 text-label-caps font-label-caps">
+                98.4% Match Score
+              </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Generated via Autonomous Engine: LangChain4j + Gemini 3.8 Flash reasoning</p>
+</div>
+<!-- Quick Action Bar -->
+<div class="flex flex-wrap items-center gap-2">
+<button class="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-variant text-code-sm font-code-sm text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="terminal">terminal</span>
+<span>Copy Markdown</span>
+</button>
+<button class="px-3 py-2 rounded-lg bg-primary-container/20 hover:bg-primary-container/30 text-code-sm font-code-sm text-primary border border-primary/40 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_month">calendar_month</span>
+<span>Export Calendar (.ics)</span>
+</button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-white/10 transition-colors" title="Print Agenda">
+<span class="material-symbols-outlined text-[18px]" data-icon="print">print</span>
+</button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-white/10 transition-colors" title="Share Schedule">
+<span class="material-symbols-outlined text-[18px]" data-icon="share">share</span>
+</button>
+</div>
+</div>
+<!-- AI Reasoning Summary Banner -->
+<div class="p-3.5 rounded-xl bg-secondary-container/15 border border-secondary/30 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5" data-icon="psychology">psychology</span>
+<p class="text-body-sm font-body-sm text-on-secondary-container leading-relaxed">
+<strong class="font-semibold text-white">AI Reasoning Summary:</strong> Selected 7 sessions balancing deep concurrency internals with production multi-agent deployment. 0 schedule collisions, buffer time allocated between Room 8 and The Big One.
+          </p>
+</div>
+<!-- Day Selector Tab Bar -->
+<div class="flex items-center gap-2 overflow-x-auto pt-2 scrollbar-none">
+<button class="px-4 py-2 rounded-lg text-code-sm font-code-sm text-on-surface-variant hover:text-white transition-colors whitespace-nowrap">
+            Full Week (7 talks)
+          </button>
+<button class="px-4 py-2 rounded-lg text-code-sm font-code-sm text-primary bg-primary-container/15 border-b-2 border-primary font-semibold whitespace-nowrap">
+            Monday Oct 5 • Deep Dives
+          </button>
+<button class="px-4 py-2 rounded-lg text-code-sm font-code-sm text-on-surface-variant hover:text-white transition-colors whitespace-nowrap">
+            Tuesday Oct 6 • Labs
+          </button>
+<button class="px-4 py-2 rounded-lg text-code-sm font-code-sm text-on-surface-variant hover:text-white transition-colors whitespace-nowrap">
+            Wednesday Oct 7 • Keynotes
+          </button>
+<button class="px-4 py-2 rounded-lg text-code-sm font-code-sm text-on-surface-variant hover:text-white transition-colors whitespace-nowrap">
+            Thursday Oct 8 • Conference
+          </button>
+<button class="px-4 py-2 rounded-lg text-code-sm font-code-sm text-on-surface-variant hover:text-white transition-colors whitespace-nowrap">
+            Friday Oct 9 • Closing
+          </button>
+</div>
+</div>
+<!-- Rich Session Timetable Cards -->
+<div class="space-y-4">
+<!-- Talk 1 -->
+<div class="glass-surface-2 rounded-2xl p-6 border border-white/10 hover:border-secondary/40 transition-all space-y-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+<div class="flex flex-wrap items-center gap-3">
+<span class="font-code-lg text-code-lg font-bold text-white flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="schedule">schedule</span>
+                09:30 - 12:30
+              </span>
+<span class="text-white/20">•</span>
+<span class="px-2.5 py-0.5 rounded bg-white/5 border border-white/10 text-code-sm font-code-sm text-on-surface">
+                Room 8 (Auditorium)
+              </span>
+<span class="px-2.5 py-0.5 rounded bg-secondary-container/30 border border-secondary/40 text-secondary-fixed text-label-caps font-label-caps">
+                Deep Dive (3h)
+              </span>
+</div>
+<!-- Track Tag -->
+<span class="px-3 py-1 rounded-full bg-secondary-container/20 text-secondary border border-secondary/30 text-label-caps font-label-caps w-fit">
+              Java Language &amp; Concurrency
+            </span>
+</div>
+<div class="space-y-2">
+<h3 class="text-headline-md font-headline-md text-white font-bold leading-tight">
+              Virtual Threads in High-Throughput Microservices: Lessons from Millions of Concurrency Tasks
+            </h3>
+<p class="text-body-md font-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary" data-icon="person">person</span>
+<span><strong>Viktor Klang &amp; Alan Bateman</strong> • Oracle / Java Platform Group</span>
+</p>
+</div>
+<!-- AI Insight Callout Box -->
+<div class="glass-highlight rounded-xl p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" data-icon="smart_toy">smart_toy</span>
+<p class="text-body-sm font-body-sm text-on-surface-variant leading-relaxed">
+<strong class="text-primary font-semibold">Why this talk was chosen for you:</strong> Matches your specific interest in Project Loom in production. Essential foundation before deploying high-concurrency LLM streaming consumers.
+            </p>
+</div>
+<!-- Quick Actions -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-code-sm font-code-sm text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px] text-amber-400" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>Bookmarked</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-code-sm font-code-sm text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
+<span>Abstract</span>
+</button>
+</div>
+<button class="text-code-sm font-code-sm text-tertiary hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="map">map</span>
+<span>Room 8 Transit Map</span>
+</button>
+</div>
+</div>
+<!-- Talk 2 -->
+<div class="glass-surface-2 rounded-2xl p-6 border border-white/10 hover:border-primary/40 transition-all space-y-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+<div class="flex flex-wrap items-center gap-3">
+<span class="font-code-lg text-code-lg font-bold text-white flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="schedule">schedule</span>
+                14:00 - 17:00
+              </span>
+<span class="text-white/20">•</span>
+<span class="px-2.5 py-0.5 rounded bg-white/5 border border-white/10 text-code-sm font-code-sm text-on-surface">
+                The Big One (Room 1)
+              </span>
+<span class="px-2.5 py-0.5 rounded bg-primary-container/20 border border-primary/40 text-primary text-label-caps font-label-caps">
+                Deep Dive (3h)
+              </span>
+</div>
+<!-- Track Tag -->
+<span class="px-3 py-1 rounded-full bg-primary-container/20 text-primary border border-primary/30 text-label-caps font-label-caps w-fit">
+              Agentic Engineering &amp; LangChain4j
+            </span>
+</div>
+<div class="space-y-2">
+<h3 class="text-headline-md font-headline-md text-white font-bold leading-tight">
+              Building Autonomous Multi-Agent Architectures in Enterprise Java with LangChain4j and Gemini 3.8
+            </h3>
+<p class="text-body-md font-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary" data-icon="person">person</span>
+<span><strong>Lize Raes &amp; Dimitris Andreadis</strong> • Devoxx Keynote Speakers &amp; LangChain4j Core</span>
+</p>
+</div>
+<!-- AI Insight Callout Box -->
+<div class="glass-highlight rounded-xl p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" data-icon="smart_toy">smart_toy</span>
+<p class="text-body-sm font-body-sm text-on-surface-variant leading-relaxed">
+<strong class="text-primary font-semibold">Why this talk was chosen for you:</strong> Direct hit for your autonomous agent engineering requirements. Features live code patterns for resilient tool-calling, memory persistence, and guardrails.
+            </p>
+</div>
+<!-- Quick Actions -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-code-sm font-code-sm text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="bookmark_add">bookmark_add</span>
+<span>Star / Bookmark</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-code-sm font-code-sm text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
+<span>Abstract</span>
+</button>
+</div>
+<button class="text-code-sm font-code-sm text-tertiary hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="map">map</span>
+<span>Room 1 Transit Map</span>
+</button>
+</div>
+</div>
+<!-- Talk 3 -->
+<div class="glass-surface-2 rounded-2xl p-6 border border-white/10 hover:border-tertiary/40 transition-all space-y-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+<div class="flex flex-wrap items-center gap-3">
+<span class="font-code-lg text-code-lg font-bold text-white flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="schedule">schedule</span>
+                17:30 - 18:00
+              </span>
+<span class="text-white/20">•</span>
+<span class="px-2.5 py-0.5 rounded bg-white/5 border border-white/10 text-code-sm font-code-sm text-on-surface">
+                Room 5
+              </span>
+<span class="px-2.5 py-0.5 rounded bg-tertiary-container/30 border border-tertiary/40 text-tertiary-fixed text-label-caps font-label-caps">
+                Tools-in-Action
+              </span>
+</div>
+<!-- Track Tag -->
+<span class="px-3 py-1 rounded-full bg-tertiary-container/20 text-tertiary border border-tertiary/30 text-label-caps font-label-caps w-fit">
+              Cloud Native &amp; Security
+            </span>
+</div>
+<div class="space-y-2">
+<h3 class="text-headline-md font-headline-md text-white font-bold leading-tight">
+              Deterministic Prompt Guardrails: Defending Production RAG Against Jailbreaks at 100k RPS
+            </h3>
+<p class="text-body-md font-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary" data-icon="person">person</span>
+<span><strong>Dr. Dan Vega &amp; Julien Dubois</strong> • Microsoft Cloud Advocate</span>
+</p>
+</div>
+<!-- AI Insight Callout Box -->
+<div class="glass-highlight rounded-xl p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" data-icon="smart_toy">smart_toy</span>
+<p class="text-body-sm font-body-sm text-on-surface-variant leading-relaxed">
+<strong class="text-primary font-semibold">Why this talk was chosen for you:</strong> Perfectly complements the agentic architecture session by addressing your constraint on enterprise LLM security guardrails.
+            </p>
+</div>
+<!-- Quick Actions -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-code-sm font-code-sm text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="bookmark_add">bookmark_add</span>
+<span>Star / Bookmark</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-code-sm font-code-sm text-on-surface border border-white/10 flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
+<span>Abstract</span>
+</button>
+</div>
+<button class="text-code-sm font-code-sm text-tertiary hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="map">map</span>
+<span>Room 5 Transit Map</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Shared Footer Component -->
+<footer class="w-full px-margin-desktop py-space-lg flex flex-col md:flex-row justify-between items-center gap-space-md bg-surface-container-lowest border-t border-outline-variant/20 mt-20 relative z-10">
+<div class="flex flex-col gap-1 text-center md:text-left">
+<span class="text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider">
+        Devoxx Belgium 2026 Engine
+      </span>
+<p class="text-body-sm font-body-sm text-on-surface-variant/70">
+        © 2026 Devoxx Belgium. Autonomous Schedule Synthesis Engine powered by Gemini 3.8 &amp; LangChain4j.
+      </p>
+</div>
+<!-- Navigation Links in Footer -->
+<div class="flex flex-wrap items-center justify-center gap-6">
+<a class="text-on-surface-variant/70 hover:text-primary transition-colors duration-150 text-body-sm font-body-sm" href="#telemetry">Telemetry Metrics</a>
+<a class="text-on-surface-variant/70 hover:text-primary transition-colors duration-150 text-body-sm font-body-sm" href="#api">API Endpoints</a>
+<a class="text-on-surface-variant/70 hover:text-primary transition-colors duration-150 text-body-sm font-body-sm" href="#privacy">Privacy Policy</a>
+<a class="text-on-surface-variant/70 hover:text-primary transition-colors duration-150 text-body-sm font-body-sm" href="#conduct">Code of Conduct</a>
+<a class="text-on-surface-variant/70 hover:text-primary transition-colors duration-150 text-body-sm font-body-sm" href="#venue">Venue Map</a>
+</div>
+</footer>
+</body></html>
