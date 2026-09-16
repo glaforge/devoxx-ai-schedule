@@ -301,13 +301,13 @@ public class DevoxxAgentWorkflowService {
             if (day.talks() != null) {
                 for (dvxaisched.model.ScheduledTalk talk : day.talks()) {
                     String realAbstract = conferenceService.getTalkById(talk.talkId())
-                        .map(ConferenceTalk::summary)
+                        .map(ConferenceTalk::talkAbstract)
                         .filter(s -> !s.isBlank())
                         .orElseGet(() -> {
                             if (talk.title() == null || talk.title().isBlank()) return "";
                             return conferenceService.getAllTalks().stream()
                                 .filter(t -> t.title() != null && t.title().equalsIgnoreCase(talk.title().trim()))
-                                .map(ConferenceTalk::summary)
+                                .map(ConferenceTalk::talkAbstract)
                                 .findFirst()
                                 .orElse(talk.talkAbstract() != null ? talk.talkAbstract() : "");
                         });
@@ -374,7 +374,7 @@ public class DevoxxAgentWorkflowService {
                     t.track(),
                     t.sessionType(),
                     "Matches your interest in " + query,
-                    t.summary()
+                    t.talkAbstract()
                 ));
             }
             days.add(new dvxaisched.model.DaySchedule(day, dates[i], labels[i], scheduled));

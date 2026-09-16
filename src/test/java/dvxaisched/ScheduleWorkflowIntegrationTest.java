@@ -94,5 +94,8 @@ class ScheduleWorkflowIntegrationTest {
         assertEquals(7006, response.body().id());
         assertNotNull(response.body().summary());
         assertFalse(response.body().summary().isBlank());
+        assertNotNull(response.body().description());
+        assertFalse(response.body().description().isBlank());
+        assertTrue(response.body().description().length() > 500, "Full abstract should be detailed");
     }
 }
