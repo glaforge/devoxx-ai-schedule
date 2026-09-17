@@ -26,7 +26,7 @@ service     := env_var_or_default("CLOUD_RUN_SERVICE", "dvxaisched")
 base_image  := env_var_or_default("CLOUD_RUN_BASE_IMAGE", "google-24/java25")
 memory      := env_var_or_default("CLOUD_RUN_MEMORY", "2Gi")
 cpu         := env_var_or_default("CLOUD_RUN_CPU", "2")
-secret      := env_var_or_default("CLOUD_RUN_SECRET", "GEMINI_API_KEY=GEMINI_API_KEY:latest")
+secret      := env_var_or_default("CLOUD_RUN_SECRET", "GEMINI_API_KEY=DEVOXX_GEMINI_API_KEY:latest")
 
 # Conference data configuration
 event_slug  := env_var_or_default("DEVOXX_EVENT_SLUG", "dvbe26")

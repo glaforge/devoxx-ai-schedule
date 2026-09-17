@@ -202,7 +202,7 @@ gcloud beta run deploy dvxaisched \
     --region=europe-west1 \
     --project=genai-java-demos \
     --no-build \
-    --set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest \
+    --set-secrets=GEMINI_API_KEY=DEVOXX_GEMINI_API_KEY:latest \
     --set-env-vars=MICRONAUT_SERVER_PORT=8080 \
     --memory=2Gi \
     --cpu=2 \
