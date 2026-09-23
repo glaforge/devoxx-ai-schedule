@@ -43,10 +43,12 @@ import java.util.Map;
 public class ScheduleController {
 
     private static final Logger LOG = LoggerFactory.getLogger(ScheduleController.class);
+    private static final int MAX_INTERESTS_LENGTH = 500;
 
     private final DevoxxAgentWorkflowService workflowService;
     private final DevoxxConferenceService conferenceService;
     private final String modelName;
+    private final java.util.concurrent.Semaphore workflowLimiter = new java.util.concurrent.Semaphore(10);
 
     public ScheduleController(
         DevoxxAgentWorkflowService workflowService,
@@ -63,8 +65,13 @@ public class ScheduleController {
         if (request == null || request.interests() == null || request.interests().isBlank()) {
             return HttpResponse.badRequest(ScheduleResponse.rejected("Interests cannot be empty."));
         }
+        if (request.interests().length() > MAX_INTERESTS_LENGTH) {
+            return HttpResponse.badRequest(ScheduleResponse.rejected(
+                "Input exceeds maximum allowed length of " + MAX_INTERESTS_LENGTH + " characters."
+            ));
+        }
 
-        LOG.info("Received schedule generation request: '{}'", request.interests());
+        LOG.info("Received schedule generation request: '{}'", sanitizeForLog(request.interests()));
         ScheduleResponse response = workflowService.processScheduleRequest(request.interests());
         return HttpResponse.ok(response);
     }
@@ -78,23 +85,53 @@ public class ScheduleController {
                 Event.of(WorkflowProgressEvent.rejected("Interests cannot be empty.", 0L))
             );
         }
+        if (interests.length() > MAX_INTERESTS_LENGTH) {
+            return Flux.just(
+                Event.of(WorkflowProgressEvent.rejected(
+                    "Input exceeds maximum allowed length of " + MAX_INTERESTS_LENGTH + " characters.", 0L
+                ))
+            );
+        }
 
-        LOG.info("Received streaming schedule request: '{}'", interests);
+        LOG.info("Received streaming schedule request: '{}'", sanitizeForLog(interests));
+
+        if (!workflowLimiter.tryAcquire()) {
+            LOG.warn("Concurrently running schedule workflows limit reached (10); rejecting request");
+            return Flux.just(
+                Event.of(WorkflowProgressEvent.rejected(
+                    "The scheduling service is currently busy handling maximum concurrent requests. Please retry in a few moments.", 0L
+                ))
+            );
+        }
+
         return Flux.create(sink -> {
-            Thread.startVirtualThread(() -> {
+            Thread worker = Thread.startVirtualThread(() -> {
                 try {
                     workflowService.processScheduleRequestWithProgress(interests, event -> {
-                        sink.next(Event.of(event));
+                        if (!sink.isCancelled()) {
+                            sink.next(Event.of(event));
+                        }
                     });
-                    sink.complete();
+                    if (!sink.isCancelled()) {
+                        sink.complete();
+                    }
                 } catch (Exception e) {
-                    LOG.error("Error streaming schedule for interests: {}", interests, e);
-                    sink.next(Event.of(
-                        WorkflowProgressEvent.rejected("Error processing request: " + e.getMessage(), 0L)
-                    ));
-                    sink.complete();
+                    LOG.error("Error streaming schedule: {}", e.getMessage(), e);
+                    if (!sink.isCancelled()) {
+                        sink.next(Event.of(
+                            WorkflowProgressEvent.rejected(
+                                "An unexpected error occurred while curating the schedule. Please try again with different topics.", 0L
+                            )
+                        ));
+                        sink.complete();
+                    }
+                } finally {
+                    workflowLimiter.release();
                 }
             });
+
+            sink.onCancel(worker::interrupt);
+            sink.onDispose(worker::interrupt);
         });
     }
 
@@ -109,7 +146,13 @@ public class ScheduleController {
         @QueryValue(value = "day", defaultValue = "") String day,
         @QueryValue(value = "limit", defaultValue = "20") int limit
     ) {
-        return HttpResponse.ok(conferenceService.searchTalks(query, day, limit));
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        return HttpResponse.ok(conferenceService.searchTalks(query, day, safeLimit));
+    }
+
+    private static String sanitizeForLog(String input) {
+        if (input == null) return "";
+        return input.replace('\r', ' ').replace('\n', ' ').trim();
     }
 
     @Get(uri = "/talks/{id}", produces = MediaType.APPLICATION_JSON)

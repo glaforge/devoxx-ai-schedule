@@ -19,6 +19,7 @@ package dvxaisched;
 import dvxaisched.model.ConferenceTalk;
 import dvxaisched.model.ScheduleRequest;
 import dvxaisched.model.ScheduleResponse;
+import java.util.List;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -131,5 +132,53 @@ class ScheduleWorkflowIntegrationTest {
         assertNotNull(response.body().description());
         assertFalse(response.body().description().isBlank());
         assertTrue(response.body().description().length() > 500, "Full abstract should be detailed");
+    }
+
+    @Test
+    void testSecurityHeaders() {
+        HttpResponse<String> response = client.toBlocking().exchange(
+            HttpRequest.GET("/api/health"),
+            String.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertEquals("nosniff", response.header("X-Content-Type-Options"));
+        assertEquals("DENY", response.header("X-Frame-Options"));
+        assertEquals("strict-origin-when-cross-origin", response.header("Referrer-Policy"));
+        assertNotNull(response.header("Content-Security-Policy"));
+        assertTrue(response.header("Content-Security-Policy").contains("frame-ancestors 'none'"));
+    }
+
+    @Test
+    void testExcessiveInputLengthRejection() {
+        String longInput = "Java and Cloud ".repeat(50); // ~750 characters
+        assertTrue(longInput.length() > 500);
+
+        ScheduleRequest request = new ScheduleRequest(longInput);
+        try {
+            client.toBlocking().exchange(
+                HttpRequest.POST("/api/schedule", request),
+                ScheduleResponse.class
+            );
+            fail("Expected HttpClientResponseException for input exceeding max length");
+        } catch (io.micronaut.http.client.exceptions.HttpClientResponseException e) {
+            assertEquals(HttpStatus.BAD_REQUEST, e.getStatus());
+            ScheduleResponse body = e.getResponse().getBody(ScheduleResponse.class).orElse(null);
+            assertNotNull(body);
+            assertFalse(body.valid());
+            assertTrue(body.validationMessage().contains("maximum allowed length"));
+        }
+    }
+
+    @Test
+    void testTalksLimitClamping() {
+        HttpResponse<ConferenceTalk[]> response = client.toBlocking().exchange(
+            HttpRequest.GET("/api/talks?limit=500"),
+            ConferenceTalk[].class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertNotNull(response.body());
+        assertTrue(response.body().length <= 100, "Limit should be clamped to maximum 100");
     }
 }

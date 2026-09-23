@@ -258,7 +258,17 @@ public class DevoxxAgentWorkflowService {
         }
 
         long totalStartTime = System.currentTimeMillis();
-        String rawInput = userInterests.trim();
+        String rawInput = userInterests != null ? userInterests.trim() : "";
+        if (rawInput.isBlank()) {
+            return ScheduleResponse.rejected("Please provide technical conference topics or interests.");
+        }
+        if (rawInput.length() > 500) {
+            String rejectMsg = "Input exceeds maximum allowed length of 500 characters. Please provide a concise summary of your topics.";
+            if (progressConsumer != null) {
+                progressConsumer.accept(WorkflowProgressEvent.rejected(rejectMsg, 0L));
+            }
+            return ScheduleResponse.rejected(rejectMsg);
+        }
 
         // Establish an AgenticScope across the 2-agent sequence
         DefaultAgenticScope scope = DefaultAgenticScope.ephemeralAgenticScope();
@@ -270,7 +280,7 @@ public class DevoxxAgentWorkflowService {
         );
 
         try {
-            LOG.info("Step 1 [Agent 1 - Validator]: Validating input '{}'", rawInput);
+            LOG.info("Step 1 [Agent 1 - Validator]: Validating input '{}'", sanitizeForLog(rawInput));
             if (progressConsumer != null) {
                 progressConsumer.accept(WorkflowProgressEvent.of(
                     "agent1_start",
@@ -493,11 +503,17 @@ public class DevoxxAgentWorkflowService {
     }
 
     private ValidationResult performFallbackValidation(String input) {
-        String lower = input.toLowerCase();
-        if (lower.contains("ignore previous") || lower.contains("system prompt") || lower.contains("you are now")) {
-            return new ValidationResult(false, "Instruction override or prompt injection attempt detected.", null);
-        }
-        return new ValidationResult(true, null, input);
+        LOG.warn("InterestValidatorAgent encountered an error or timeout; rejecting request by default (fail-closed)");
+        return new ValidationResult(
+            false,
+            "The safety validation service is temporarily unavailable. Please retry in a few moments with your conference topics.",
+            null
+        );
+    }
+
+    private static String sanitizeForLog(String input) {
+        if (input == null) return "";
+        return input.replace('\r', ' ').replace('\n', ' ').trim();
     }
 
     private ScheduleResponse buildFallbackSchedule(String query, List<ConferenceTalk> talks) {

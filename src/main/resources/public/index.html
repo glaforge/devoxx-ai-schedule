@@ -266,6 +266,7 @@
             <textarea
               id="interestsInput"
               rows="3"
+              maxlength="500"
               class="w-full bg-surface-container-lowest/90 text-on-surface font-sans text-sm rounded-xl p-4 border border-white/10 focus:border-secondary focus:ring-1 focus:ring-secondary/50 focus:outline-none transition-all placeholder:text-slate-500 leading-relaxed resize-none"
               placeholder="I am a senior Java architect focusing on autonomous AI agents, Loom virtual thread throughput in production, and enterprise LLM security guardrails..."
               required
@@ -750,7 +751,7 @@
             ? 'bg-primary-container/20 text-primary border border-primary/50 font-semibold'
             : 'text-on-surface-variant hover:text-white bg-surface-container/60 border border-white/5'
         }`;
-        btn.innerHTML = `${capitalize(d.day)} (${(d.talks || []).length})`;
+        btn.textContent = `${capitalize(d.day)} (${(d.talks || []).length})`;
         btn.onclick = () => {
           activeDayFilter = d.day;
           renderDayTabs(days);
@@ -786,9 +787,10 @@
 
         const dayHeader = document.createElement('div');
         dayHeader.className = "flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-primary";
+        const safeDayLabel = escapeHtml(d.dayLabel || (capitalize(d.day) + ' • ' + d.date));
         dayHeader.innerHTML = `
           <span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
-          <span>${d.dayLabel || (capitalize(d.day) + ' • ' + d.date)}</span>
+          <span>${safeDayLabel}</span>
           <span class="text-[11px] font-normal text-on-surface-variant">(${(d.talks || []).length} sessions)</span>
         `;
         daySection.appendChild(dayHeader);
@@ -802,7 +804,8 @@
 
           const trackBadge = getTrackBadge(talk.track);
           const typeBadge = getSessionTypeBadge(talk.sessionType);
-          const talkUrl = talk.url || (talk.talkId ? `https://m.devoxx.com/events/dvbe26/talks/${talk.talkId}` : null);
+          const rawTalkUrl = talk.url || (talk.talkId ? `https://m.devoxx.com/events/dvbe26/talks/${talk.talkId}` : null);
+          const talkUrl = sanitizeUrl(rawTalkUrl);
 
           card.innerHTML = `
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -973,6 +976,15 @@
       return div.innerHTML;
     }
 
+    function sanitizeUrl(url) {
+      if (!url) return null;
+      const trimmed = String(url).trim();
+      if (/^https?:\/\//i.test(trimmed)) {
+        return trimmed;
+      }
+      return null;
+    }
+
     function formatAbstractHtml(raw) {
       if (!raw) return '<span class="italic text-slate-400">No detailed abstract provided for this session.</span>';
 
@@ -1101,9 +1113,11 @@
     });
 
     // Print Button
-    printBtn.addEventListener('click', () => {
-      window.print();
-    });
+    if (printBtn) {
+      printBtn.addEventListener('click', () => {
+        window.print();
+      });
+    }
   </script>
 </body>
 </html>
