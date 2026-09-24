@@ -16,14 +16,20 @@
 
 package dvxaisched.controller;
 
+import dvxaisched.config.ClientIpResolver;
 import dvxaisched.model.ConferenceTalk;
 import dvxaisched.model.ScheduleRequest;
 import dvxaisched.model.ScheduleResponse;
 import dvxaisched.model.WorkflowProgressEvent;
 import dvxaisched.service.DevoxxAgentWorkflowService;
 import dvxaisched.service.DevoxxConferenceService;
+import dvxaisched.service.RateLimiterService;
+import dvxaisched.service.RateLimiterService.RateLimitDecision;
+import dvxaisched.service.ScheduleCache;
 import io.micronaut.context.annotation.Value;
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -47,21 +53,30 @@ public class ScheduleController {
 
     private final DevoxxAgentWorkflowService workflowService;
     private final DevoxxConferenceService conferenceService;
+    private final RateLimiterService rateLimiter;
+    private final ScheduleCache scheduleCache;
     private final String modelName;
     private final java.util.concurrent.Semaphore workflowLimiter = new java.util.concurrent.Semaphore(10);
 
     public ScheduleController(
         DevoxxAgentWorkflowService workflowService,
         DevoxxConferenceService conferenceService,
+        RateLimiterService rateLimiter,
+        ScheduleCache scheduleCache,
         @Value("${gemini.model:gemini-3.5-flash-lite}") String modelName
     ) {
         this.workflowService = workflowService;
         this.conferenceService = conferenceService;
+        this.rateLimiter = rateLimiter;
+        this.scheduleCache = scheduleCache;
         this.modelName = modelName;
     }
 
     @Post(uri = "/schedule", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
-    public HttpResponse<ScheduleResponse> generateSchedule(@Body ScheduleRequest request) {
+    public HttpResponse<ScheduleResponse> generateSchedule(
+        @Body ScheduleRequest request,
+        HttpRequest<?> httpRequest
+    ) {
         if (request == null || request.interests() == null || request.interests().isBlank()) {
             return HttpResponse.badRequest(ScheduleResponse.rejected("Interests cannot be empty."));
         }
@@ -71,14 +86,51 @@ public class ScheduleController {
             ));
         }
 
-        LOG.info("Received schedule generation request: '{}'", sanitizeForLog(request.interests()));
-        ScheduleResponse response = workflowService.processScheduleRequest(request.interests());
-        return HttpResponse.ok(response);
+        String interests = request.interests().trim();
+        LOG.info("Received schedule generation request: '{}'", sanitizeForLog(interests));
+
+        // 1. Check in-memory query cache
+        var cached = scheduleCache.get(interests);
+        if (cached.isPresent()) {
+            LOG.info("Serving schedule from cache for query: '{}'", sanitizeForLog(interests));
+            return HttpResponse.ok(cached.get());
+        }
+
+        // 2. Check rate limit (per session and IP aggregate)
+        String sessionId = ClientIpResolver.resolveSessionId(httpRequest);
+        String clientIp = ClientIpResolver.resolveClientIp(httpRequest);
+        RateLimitDecision rateDecision = rateLimiter.checkRateLimit(sessionId, clientIp);
+        if (!rateDecision.allowed()) {
+            LOG.warn("Rate limit rejected schedule request for IP {} (session {}): {}", clientIp, sessionId, rateDecision.reason());
+            return HttpResponse.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(rateDecision.retryAfterSeconds()))
+                .body(ScheduleResponse.rejected(
+                    "Rate limit exceeded. " + rateDecision.reason() + " Please retry in " + rateDecision.retryAfterSeconds() + " seconds."
+                ));
+        }
+
+        // 3. Concurrency limiter & workflow execution
+        if (!workflowLimiter.tryAcquire()) {
+            LOG.warn("Concurrently running schedule workflows limit reached (10); rejecting request");
+            return HttpResponse.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ScheduleResponse.rejected("The scheduling service is currently busy handling maximum concurrent requests. Please retry in a few moments."));
+        }
+
+        try {
+            ScheduleResponse response = workflowService.processScheduleRequest(interests);
+            if (response != null && response.valid()) {
+                scheduleCache.put(interests, response);
+            }
+            return HttpResponse.ok(response);
+        } finally {
+            workflowLimiter.release();
+        }
     }
 
     @Get(uri = "/schedule/stream", produces = MediaType.TEXT_EVENT_STREAM)
     public Flux<Event<WorkflowProgressEvent>> streamSchedule(
-        @QueryValue(value = "interests", defaultValue = "") String interests
+        @QueryValue(value = "interests", defaultValue = "") String interests,
+        HttpRequest<?> httpRequest
     ) {
         if (interests == null || interests.isBlank()) {
             return Flux.just(
@@ -93,8 +145,46 @@ public class ScheduleController {
             );
         }
 
-        LOG.info("Received streaming schedule request: '{}'", sanitizeForLog(interests));
+        String cleanInterests = interests.trim();
+        LOG.info("Received streaming schedule request: '{}'", sanitizeForLog(cleanInterests));
 
+        // 1. Check in-memory query cache
+        var cached = scheduleCache.get(cleanInterests);
+        if (cached.isPresent()) {
+            LOG.info("Serving streaming schedule from cache for query: '{}'", sanitizeForLog(cleanInterests));
+            ScheduleResponse resp = cached.get();
+            return Flux.just(
+                Event.of(WorkflowProgressEvent.of(
+                    "agent1_done",
+                    "Agent 1: Guardrail Validator",
+                    "Query verified (cache hit): " + cleanInterests,
+                    5L
+                )),
+                Event.of(WorkflowProgressEvent.of(
+                    "agent2_done",
+                    "Agent 2: Schedule Optimizer",
+                    "Loaded personalized timetable from cache.",
+                    10L
+                )),
+                Event.of(WorkflowProgressEvent.complete(resp, 15L))
+            );
+        }
+
+        // 2. Check rate limit (per session and IP aggregate)
+        String sessionId = ClientIpResolver.resolveSessionId(httpRequest);
+        String clientIp = ClientIpResolver.resolveClientIp(httpRequest);
+        RateLimitDecision rateDecision = rateLimiter.checkRateLimit(sessionId, clientIp);
+        if (!rateDecision.allowed()) {
+            LOG.warn("Rate limit rejected streaming request for IP {} (session {}): {}", clientIp, sessionId, rateDecision.reason());
+            return Flux.just(
+                Event.of(WorkflowProgressEvent.rejected(
+                    "Rate limit exceeded. " + rateDecision.reason() + " Please retry in " + rateDecision.retryAfterSeconds() + " seconds.",
+                    0L
+                ))
+            );
+        }
+
+        // 3. Concurrency limiter & streaming execution
         if (!workflowLimiter.tryAcquire()) {
             LOG.warn("Concurrently running schedule workflows limit reached (10); rejecting request");
             return Flux.just(
@@ -107,11 +197,14 @@ public class ScheduleController {
         return Flux.create(sink -> {
             Thread worker = Thread.startVirtualThread(() -> {
                 try {
-                    workflowService.processScheduleRequestWithProgress(interests, event -> {
+                    ScheduleResponse response = workflowService.processScheduleRequestWithProgress(cleanInterests, event -> {
                         if (!sink.isCancelled()) {
                             sink.next(Event.of(event));
                         }
                     });
+                    if (response != null && response.valid()) {
+                        scheduleCache.put(cleanInterests, response);
+                    }
                     if (!sink.isCancelled()) {
                         sink.complete();
                     }

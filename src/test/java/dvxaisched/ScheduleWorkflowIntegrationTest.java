@@ -181,4 +181,65 @@ class ScheduleWorkflowIntegrationTest {
         assertNotNull(response.body());
         assertTrue(response.body().length <= 100, "Limit should be clamped to maximum 100");
     }
+
+    @Inject
+    dvxaisched.service.RateLimiterService rateLimiterService;
+
+    @Inject
+    dvxaisched.service.ScheduleCache scheduleCache;
+
+    @Test
+    void testScheduleCacheHit() {
+        scheduleCache.clear();
+        String query = "Architecture in Java";
+        ScheduleResponse cachedResponse = new ScheduleResponse(
+            true, "Pre-cached timetable", "Architecture Theme", "Overview", List.of()
+        );
+        scheduleCache.put(query, cachedResponse);
+
+        HttpResponse<ScheduleResponse> response = client.toBlocking().exchange(
+            HttpRequest.POST("/api/schedule", new ScheduleRequest(query)),
+            ScheduleResponse.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertNotNull(response.body());
+        assertEquals("Pre-cached timetable", response.body().validationMessage());
+    }
+
+    @Test
+    void testScheduleRateLimitingEndpoint() {
+        String testSession = "test-rate-limit-session";
+        String ip = "192.0.2.100";
+
+        rateLimiterService.reset();
+
+        for (int i = 0; i < 5; i++) {
+            var req = HttpRequest.POST("/api/schedule", new ScheduleRequest("Topic " + i))
+                .header("X-Session-ID", testSession)
+                .header("X-Forwarded-For", ip);
+            try {
+                client.toBlocking().exchange(req, ScheduleResponse.class);
+            } catch (io.micronaut.http.client.exceptions.HttpClientResponseException ignored) {
+            }
+        }
+
+        try {
+            var req = HttpRequest.POST("/api/schedule", new ScheduleRequest("Topic 6"))
+                .header("X-Session-ID", testSession)
+                .header("X-Forwarded-For", ip);
+            client.toBlocking().exchange(req, ScheduleResponse.class);
+            fail("Expected 429 TOO_MANY_REQUESTS");
+        } catch (io.micronaut.http.client.exceptions.HttpClientResponseException e) {
+            assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getStatus());
+            assertNotNull(e.getResponse().header("Retry-After"));
+            ScheduleResponse body = e.getResponse().getBody(ScheduleResponse.class).orElse(null);
+            assertNotNull(body);
+            assertFalse(body.valid());
+            assertTrue(body.validationMessage().contains("Rate limit exceeded"));
+        } finally {
+            rateLimiterService.reset();
+        }
+    }
 }
+

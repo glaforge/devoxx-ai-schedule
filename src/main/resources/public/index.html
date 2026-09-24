@@ -561,11 +561,12 @@
 
     function setStepFailed(stepId, reason) {
       if (stepId === 'agent1') {
+        const isRateLimit = reason && (reason.toLowerCase().includes('rate limit') || reason.toLowerCase().includes('throttled'));
         stepAgent1.className = "glass-base rounded-xl p-5 border border-rose-500/50 bg-rose-950/30 relative overflow-hidden";
         agent1Dot.className = "w-2 h-2 rounded-full bg-rose-400";
-        agent1Timer.textContent = "✕ Flagged";
+        agent1Timer.textContent = isRateLimit ? "✕ Throttled" : "✕ Flagged";
         agent1Timer.className = "px-2 py-0.5 rounded text-xs font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold";
-        agent1Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-rose-400" data-icon="cancel">cancel</span><span class="text-rose-400">Rejected</span>`;
+        agent1Subtext.innerHTML = `<span class="material-symbols-outlined text-[16px] text-rose-400" data-icon="${isRateLimit ? 'schedule' : 'cancel'}">${isRateLimit ? 'schedule' : 'cancel'}</span><span class="text-rose-400">${isRateLimit ? 'Rate Limited' : 'Rejected'}</span>`;
       }
     }
 
@@ -608,8 +609,22 @@
 
       let streamFinished = false;
 
+      // Retrieve or generate anonymous persistent session ID for rate limiting
+      let sessionId = '';
+      try {
+        sessionId = localStorage.getItem('dvx_sid');
+        if (!sessionId) {
+          sessionId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+            ? crypto.randomUUID() 
+            : 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+          localStorage.setItem('dvx_sid', sessionId);
+        }
+      } catch (err) {
+        sessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
+      }
+
       // Connect to SSE stream
-      const streamUrl = `/api/schedule/stream?interests=${encodeURIComponent(interests)}`;
+      const streamUrl = `/api/schedule/stream?interests=${encodeURIComponent(interests)}&sessionId=${encodeURIComponent(sessionId)}`;
       const eventSource = new EventSource(streamUrl);
 
       eventSource.onmessage = (event) => {
