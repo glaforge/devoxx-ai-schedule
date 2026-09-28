@@ -175,17 +175,14 @@ The application is deployed to Google Cloud Run using the **build-less Java 25**
 ### Deploying via `just`
 
 ```bash
-# Deploy with default project (genai-java-demos) and region (europe-west1)
-just deploy
-
-# Deploy to a custom GCP project and region
-just project=my-company-project region=us-central1 deploy
+# Deploy to Google Cloud Run (pass project and region, or configure via env vars)
+just project=YOUR_PROJECT_ID region=YOUR_REGION deploy
 
 # Check deployed service status and URL
-just status
+just project=YOUR_PROJECT_ID region=YOUR_REGION status
 
 # View live Cloud Run logs
-just logs
+just project=YOUR_PROJECT_ID region=YOUR_REGION logs
 ```
 
 ### Manual Deployment via `gcloud`
@@ -199,10 +196,10 @@ mkdir -p build/run && cp build/libs/dvxaisched-0.1-all.jar build/run/application
 gcloud beta run deploy dvxaisched \
     --source=build/run \
     --base-image=google-24/java25 \
-    --region=europe-west1 \
-    --project=genai-java-demos \
+    --region=YOUR_REGION \
+    --project=YOUR_PROJECT_ID \
     --no-build \
-    --set-secrets=GEMINI_API_KEY=DEVOXX_GEMINI_API_KEY:latest \
+    --set-secrets=GEMINI_API_KEY=YOUR_SECRET_NAME:latest \
     --set-env-vars=MICRONAUT_SERVER_PORT=8080 \
     --memory=2Gi \
     --cpu=2 \
