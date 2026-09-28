@@ -18,6 +18,7 @@ plugins {
     id "io.micronaut.application" version "5.0.2"
     id "com.gradleup.shadow" version "9.4.1"
     id "io.micronaut.aot" version "5.0.2"
+    id "jacoco"
 }
 
 version = "0.1"
@@ -40,6 +41,7 @@ dependencies {
     implementation "io.micronaut:micronaut-http-client"
     runtimeOnly "ch.qos.logback:logback-classic"
     testImplementation "io.micronaut:micronaut-http-client"
+    testImplementation "org.mockito:mockito-core:5.14.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
@@ -85,7 +87,7 @@ micronaut {
 }
 
 tasks.named("dockerfile") {
-    baseImage = "eclipse-temurin:25-jre"
+    from("eclipse-temurin:25-jre")
 }
 
 tasks.withType(AbstractTestTask).configureEach {
@@ -95,6 +97,16 @@ tasks.withType(AbstractTestTask).configureEach {
 tasks.withType(Test).configureEach {
     def apiKey = System.getenv("GEMINI_API_KEY") ?: ""
     environment "GEMINI_API_KEY", apiKey
+    finalizedBy(tasks.named("jacocoTestReport"))
+}
+
+tasks.named("jacocoTestReport") {
+    dependsOn(tasks.withType(Test))
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = true
+    }
 }
 
 tasks.register("fetchSchedule") {

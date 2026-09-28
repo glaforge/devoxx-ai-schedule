@@ -41,6 +41,10 @@ default:
 test:
     ./gradlew test
 
+# Run test suite and generate JaCoCo code coverage reports
+coverage:
+    ./gradlew test jacocoTestReport
+
 # Run the Micronaut application locally
 run:
     ./gradlew run
