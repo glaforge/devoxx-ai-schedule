@@ -77,12 +77,19 @@ flowchart TD
 - Implements LangChain4j's `AgentListener` (`beforeAgentInvocation`, `afterAgentInvocation`, `beforeAgentToolExecution`, `afterAgentToolExecution`).
 - Hooks into `AgenticScope` and streams live progress events via Server-Sent Events (`/api/schedule/stream`) to render animated status cards in the web frontend.
 
+### 7. Interactive Slot Re-Curator (`TalkAlternativeAgent`)
+- **Role:** Allows attendees to swap any talk they've already seen or already know too well for a compelling alternative.
+- **Workflow:**
+  - Identifies parallel sessions in other rooms for that exact time slot.
+  - Gemini 3.5 Flash-Lite evaluates attendee interests and curates the **top 3 alternatives**, generating custom personalized rationales for each.
+  - Attendee selects their preferred talk in a modal dialog, swapping it in-place in their agenda while automatically updating ICS calendar and Markdown exports.
+
 ---
 
 ## Tech Stack
 
 - **Runtime & Language:** Java 25 (OpenJDK 25) with virtual threads
-- **Backend Framework:** Micronaut 5.1.5 (Netty HTTP server, Serde JSON, Project Reactor)
+- **Backend Framework:** Micronaut 5.2.0 (Netty HTTP server, Serde JSON, Project Reactor)
 - **Agentic AI:** LangChain4j `1.20.0-beta30` (`langchain4j-agentic`, `langchain4j-google-genai`)
 - **LLM:** Google Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)
 - **Cloud Infrastructure:** Google Cloud Run (Serverless build-less container execution) & Google Secret Manager

@@ -77,6 +77,42 @@ public class DevoxxConferenceService {
         return talks.stream().filter(t -> t.id() == id).findFirst();
     }
 
+    public List<ConferenceTalk> getSlotAlternatives(long id) {
+        Optional<ConferenceTalk> currentOpt = getTalkById(id);
+        if (currentOpt.isEmpty()) {
+            return List.of();
+        }
+        ConferenceTalk current = currentOpt.get();
+        String day = current.day();
+        String start = current.startTime();
+        String end = current.endTime();
+
+        // 1. Exact time slot match on the same day in other rooms
+        List<ConferenceTalk> exactPeers = talks.stream()
+            .filter(t -> t.id() != current.id())
+            .filter(t -> t.day() != null && t.day().equalsIgnoreCase(day))
+            .filter(t -> t.startTime() != null && t.startTime().equals(start) && t.endTime() != null && t.endTime().equals(end))
+            .sorted(Comparator.comparingInt(ConferenceTalk::totalFavourites).reversed())
+            .toList();
+
+        if (!exactPeers.isEmpty()) {
+            return exactPeers;
+        }
+
+        // 2. Overlapping time slot match if no exact match (e.g. labs vs shorter sessions)
+        return talks.stream()
+            .filter(t -> t.id() != current.id())
+            .filter(t -> t.day() != null && t.day().equalsIgnoreCase(day))
+            .filter(t -> t.startTime() != null && t.endTime() != null && hasOverlap(start, end, t.startTime(), t.endTime()))
+            .sorted(Comparator.comparingInt(ConferenceTalk::totalFavourites).reversed())
+            .toList();
+    }
+
+    private static boolean hasOverlap(String s1, String e1, String s2, String e2) {
+        if (s1 == null || e1 == null || s2 == null || e2 == null) return false;
+        return s1.compareTo(e2) < 0 && s2.compareTo(e1) < 0;
+    }
+
     public List<String> getAllTracks() {
         return talks.stream()
             .map(ConferenceTalk::track)
@@ -129,7 +165,14 @@ public class DevoxxConferenceService {
             .toList();
     }
 
-    private int scoreTalk(ConferenceTalk talk, String[] keywords) {
+    public int scoreTalk(ConferenceTalk talk, String query) {
+        if (query == null || query.isBlank()) {
+            return talk != null ? Math.min(talk.totalFavourites(), 10) : 0;
+        }
+        return scoreTalk(talk, query.toLowerCase().split("\\s+"));
+    }
+
+    public int scoreTalk(ConferenceTalk talk, String[] keywords) {
         int score = 0;
         String title = talk.title() != null ? talk.title().toLowerCase() : "";
         String summary = talk.summary() != null ? talk.summary().toLowerCase() : "";

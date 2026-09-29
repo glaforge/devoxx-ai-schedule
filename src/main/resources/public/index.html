@@ -182,6 +182,28 @@
       margin-bottom: 0.5rem;
       color: #cbd5e1;
     }
+
+    /* Modal dialog styling with glassmorphism */
+    dialog#alternativesModal {
+      margin: auto;
+      max-width: 56rem;
+      width: calc(100% - 2rem);
+      max-height: 90vh;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 1.25rem;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      color: #f1f5f9;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.12);
+      padding: 0;
+      overflow: hidden;
+    }
+    dialog#alternativesModal::backdrop {
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
   </style>
 </head>
 <body class="bg-background text-on-surface font-sans antialiased min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-white">
@@ -463,6 +485,65 @@
     </section>
 
   </main>
+
+  <!-- Native Modal Dialog for Talk Alternatives -->
+  <dialog id="alternativesModal" closedby="any" aria-labelledby="alternativesModalTitle">
+    <div class="flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="flex items-start justify-between p-5 sm:p-6 border-b border-white/10 bg-surface-container/40">
+        <div class="space-y-1 pr-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-[22px]" data-icon="swap_horiz">swap_horiz</span>
+            <h2 id="alternativesModalTitle" class="text-base sm:text-lg font-bold text-white tracking-tight">Select an Alternative Talk</h2>
+          </div>
+          <p id="alternativesSubtitle" class="text-xs sm:text-sm text-on-surface-variant font-mono">
+            Replacing current session
+          </p>
+        </div>
+        <button type="button" onclick="closeAlternativesModal()" class="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition" aria-label="Close dialog">
+          <span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+        </button>
+      </div>
+
+      <!-- Body / Content -->
+      <div id="alternativesBody" class="p-5 sm:p-6 overflow-y-auto space-y-4">
+        <!-- Loading state -->
+        <div id="alternativesLoading" class="py-12 flex flex-col items-center justify-center text-center space-y-3">
+          <div class="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+          <p class="text-sm font-semibold text-white">AI Agent Curating Top 3 Alternatives...</p>
+          <p class="text-xs font-mono text-on-surface-variant max-w-md">Gemini is evaluating other sessions in this exact time slot matching your stated technical interests.</p>
+        </div>
+
+        <!-- Error / No Alternatives state -->
+        <div id="alternativesEmpty" class="hidden py-10 text-center space-y-2">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant" data-icon="info">info</span>
+          <p id="alternativesEmptyText" class="text-sm font-mono text-on-surface-variant">No alternative sessions found for this slot.</p>
+        </div>
+
+        <!-- Alternatives Grid Container -->
+        <div id="alternativesCards" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-4 border-t border-white/10 bg-surface-container/20 flex items-center justify-between text-xs text-on-surface-variant font-mono">
+        <span class="hidden sm:inline">Press Esc or click outside to dismiss</span>
+        <span class="sm:hidden">Tap outside to close</span>
+        <button type="button" onclick="closeAlternativesModal()" class="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-on-surface hover:text-white transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification for Swapped Talks -->
+  <div id="swapToast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="glass-surface-2 border border-secondary/40 shadow-xl shadow-black/60 px-4 py-3 rounded-xl flex items-center gap-2.5 text-xs font-mono text-white">
+      <span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+      <span id="swapToastText">Talk updated</span>
+    </div>
+  </div>
 
   <!-- Application Logic & SSE Streaming -->
   <script>
@@ -828,12 +909,14 @@
 
         (d.talks || []).forEach(talk => {
           const card = document.createElement('div');
+          card.id = `talk-card-${talk.talkId}`;
           card.className = "glass-surface-2 rounded-2xl p-6 border border-white/10 hover:border-secondary/40 transition-all space-y-4";
 
           const trackBadge = getTrackBadge(talk.track);
           const typeBadge = getSessionTypeBadge(talk.sessionType);
           const rawTalkUrl = talk.url || (talk.talkId ? `https://m.devoxx.com/events/dvbe26/talks/${talk.talkId}` : null);
           const talkUrl = sanitizeUrl(rawTalkUrl);
+          const isPlenaryKeynote = talk.sessionType && talk.sessionType.toLowerCase().includes('keynote');
 
           card.innerHTML = `
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -894,12 +977,22 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-2 border-t border-white/5">
-              <button type="button" id="abstract-btn-${talk.talkId}" class="abstract-toggle-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
-                onclick="toggleAbstract(${talk.talkId}, this)">
-                <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
-                <span>Abstract</span>
-              </button>
+            <div class="flex flex-wrap items-center justify-between pt-2 border-t border-white/5 gap-2">
+              <div class="flex items-center gap-2">
+                <button type="button" id="abstract-btn-${talk.talkId}" class="abstract-toggle-btn px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-xs font-mono text-on-surface-variant hover:text-white transition flex items-center gap-1.5"
+                  onclick="toggleAbstract(${talk.talkId}, this)">
+                  <span class="material-symbols-outlined text-[16px]" data-icon="description">description</span>
+                  <span>Abstract</span>
+                </button>
+                ${!isPlenaryKeynote ? `
+                  <button type="button" class="swap-talk-btn px-3 py-1.5 rounded-lg bg-secondary-container/20 hover:bg-secondary-container/30 border border-secondary/40 text-xs font-mono text-secondary hover:text-white transition flex items-center gap-1.5 group"
+                    title="Find alternative talks for this time slot"
+                    onclick="openAlternativesModal(${talk.talkId}, '${escapeHtml(talk.day || d.day)}')">
+                    <span class="material-symbols-outlined text-[15px] group-hover:rotate-180 transition-transform duration-300" data-icon="swap_horiz">swap_horiz</span>
+                    <span>Find Alternatives</span>
+                  </button>
+                ` : ''}
+              </div>
               ${talkUrl ? `
                 <a href="${escapeHtml(talkUrl)}" target="_blank" rel="noopener noreferrer"
                    class="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-xs font-mono text-primary hover:text-white transition flex items-center gap-1.5"
@@ -955,6 +1048,200 @@
           btn.classList.remove('border-primary/40', 'text-primary', 'bg-primary/10');
           btn.classList.add('text-on-surface-variant');
         }
+      }
+    }
+
+    // Modal dialog controls and alternatives workflow
+    const alternativesModal = document.getElementById('alternativesModal');
+    const alternativesSubtitle = document.getElementById('alternativesSubtitle');
+    const alternativesLoading = document.getElementById('alternativesLoading');
+    const alternativesEmpty = document.getElementById('alternativesEmpty');
+    const alternativesEmptyText = document.getElementById('alternativesEmptyText');
+    const alternativesCards = document.getElementById('alternativesCards');
+
+    // Fallback light-dismiss for browsers without native closedby support (e.g. Safari)
+    if (alternativesModal && !('closedBy' in HTMLDialogElement.prototype)) {
+      alternativesModal.addEventListener('click', (event) => {
+        if (event.target !== alternativesModal) return;
+        const rect = alternativesModal.getBoundingClientRect();
+        const isDialogContent = (
+          rect.top <= event.clientY &&
+          event.clientY <= rect.top + rect.height &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.left + rect.width
+        );
+        if (!isDialogContent) {
+          closeAlternativesModal();
+        }
+      });
+    }
+
+    function closeAlternativesModal() {
+      if (alternativesModal && alternativesModal.open) {
+        alternativesModal.close();
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('swapToast');
+      const text = document.getElementById('swapToastText');
+      if (!toast || !text) return;
+      text.textContent = message;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+
+    async function openAlternativesModal(talkId, day) {
+      if (!currentScheduleData || !currentScheduleData.days) return;
+
+      let currentTalk = null;
+      for (const d of currentScheduleData.days) {
+        if (d.talks) {
+          const found = d.talks.find(t => t.talkId === talkId);
+          if (found) {
+            currentTalk = found;
+            break;
+          }
+        }
+      }
+      if (!currentTalk) return;
+
+      alternativesSubtitle.innerHTML = `Replacing: <strong class="text-white">${escapeHtml(currentTalk.title)}</strong> • <span class="text-tertiary">${escapeHtml(currentTalk.startTime)} – ${escapeHtml(currentTalk.endTime)}</span> • <span class="capitalize text-slate-300">${escapeHtml(day)}</span>`;
+
+      alternativesLoading.classList.remove('hidden');
+      alternativesEmpty.classList.add('hidden');
+      alternativesCards.classList.add('hidden');
+      alternativesCards.innerHTML = '';
+
+      if (typeof alternativesModal.showModal === 'function') {
+        alternativesModal.showModal();
+      }
+
+      const interests = interestsInput ? interestsInput.value.trim() : '';
+
+      try {
+        const res = await fetch('/api/schedule/alternatives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ interests, talkId })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        alternativesLoading.classList.add('hidden');
+
+        const alts = data.alternatives || [];
+        if (!data.hasAlternatives || alts.length === 0) {
+          alternativesEmptyText.textContent = data.message || 'No alternative sessions available in this time slot.';
+          alternativesEmpty.classList.remove('hidden');
+          return;
+        }
+
+        renderAlternativeCards(alts, day, talkId);
+        alternativesCards.classList.remove('hidden');
+      } catch (err) {
+        console.error('Failed to fetch alternatives:', err);
+        alternativesLoading.classList.add('hidden');
+        alternativesEmptyText.textContent = 'Unable to curate alternatives at this time. Please try again.';
+        alternativesEmpty.classList.remove('hidden');
+      }
+    }
+
+    function renderAlternativeCards(alternatives, day, oldTalkId) {
+      alternativesCards.innerHTML = '';
+      alternatives.forEach(alt => {
+        const card = document.createElement('div');
+        card.className = "flex flex-col justify-between p-4 rounded-xl glass-surface-2 border border-white/10 hover:border-secondary/40 transition-all space-y-3 bg-surface-container-low/70";
+
+        const trackBadge = getTrackBadge(alt.track);
+        const typeBadge = getSessionTypeBadge(alt.sessionType);
+        const rawAltUrl = alt.url || (alt.talkId ? `https://m.devoxx.com/events/dvbe26/talks/${alt.talkId}` : null);
+        const altUrl = sanitizeUrl(rawAltUrl);
+
+        card.innerHTML = `
+          <div class="space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-1.5">
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-white/5 border border-white/10 text-on-surface flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px] text-tertiary" data-icon="room">room</span>
+                ${escapeHtml(alt.room || 'TBA')}
+              </span>
+              ${typeBadge}
+            </div>
+
+            <div>
+              ${trackBadge}
+            </div>
+
+            <h4 class="text-sm font-bold text-white leading-snug line-clamp-2">
+              ${altUrl ? `
+                <a href="${escapeHtml(altUrl)}" target="_blank" rel="noopener noreferrer"
+                   class="hover:text-primary transition inline-flex items-center gap-1 group"
+                   title="Open session on Devoxx Companion">
+                  <span>${escapeHtml(alt.title)}</span>
+                  <span class="material-symbols-outlined text-[13px] text-primary/70 group-hover:text-primary transition" data-icon="open_in_new">open_in_new</span>
+                </a>
+              ` : escapeHtml(alt.title)}
+            </h4>
+
+            <p class="text-xs text-on-surface-variant flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px] text-tertiary shrink-0" data-icon="person">person</span>
+              <span class="line-clamp-1">${escapeHtml(alt.speakers || 'TBA')}</span>
+            </p>
+
+            ${alt.reason ? `
+              <div class="p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-[11px] text-slate-200 leading-relaxed">
+                <span class="text-primary font-semibold block mb-0.5">Why this fits:</span>
+                ${escapeHtml(alt.reason)}
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="pt-2 border-t border-white/5">
+            <button type="button" class="w-full py-2 px-3 rounded-lg bg-primary hover:bg-primary-container text-white font-mono text-xs font-semibold shadow-md shadow-primary/20 hover:shadow-primary/40 transition flex items-center justify-center gap-1.5 select-alt-btn">
+              <span class="material-symbols-outlined text-[15px]" data-icon="check_circle">check_circle</span>
+              <span>Choose This Talk</span>
+            </button>
+          </div>
+        `;
+
+        card.querySelector('.select-alt-btn').addEventListener('click', () => {
+          selectAlternative(day, oldTalkId, alt);
+        });
+
+        alternativesCards.appendChild(card);
+      });
+    }
+
+    function selectAlternative(day, oldTalkId, newTalk) {
+      if (!currentScheduleData || !currentScheduleData.days) return;
+      const dayObj = currentScheduleData.days.find(d => (d.day || '').toLowerCase() === (day || '').toLowerCase());
+      if (!dayObj || !dayObj.talks) return;
+
+      const idx = dayObj.talks.findIndex(t => t.talkId === oldTalkId);
+      if (idx !== -1) {
+        dayObj.talks[idx] = newTalk;
+        renderAgenda(currentScheduleData.days);
+        renderDayTabs(currentScheduleData.days);
+        closeAlternativesModal();
+
+        // Highlight the replaced card briefly with a gentle pulse effect
+        setTimeout(() => {
+          const cardEl = document.getElementById(`talk-card-${newTalk.talkId}`);
+          if (cardEl) {
+            cardEl.classList.add('ring-2', 'ring-secondary', 'bg-secondary/10');
+            setTimeout(() => {
+              cardEl.classList.remove('ring-2', 'ring-secondary', 'bg-secondary/10');
+            }, 2500);
+            cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+
+        showToast(`Swapped to "${newTalk.title}"!`);
       }
     }
 

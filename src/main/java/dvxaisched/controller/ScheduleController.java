@@ -20,6 +20,8 @@ import dvxaisched.config.ClientIpResolver;
 import dvxaisched.model.ConferenceTalk;
 import dvxaisched.model.ScheduleRequest;
 import dvxaisched.model.ScheduleResponse;
+import dvxaisched.model.TalkAlternativeRequest;
+import dvxaisched.model.TalkAlternativesResponse;
 import dvxaisched.model.WorkflowProgressEvent;
 import dvxaisched.service.DevoxxAgentWorkflowService;
 import dvxaisched.service.DevoxxConferenceService;
@@ -37,6 +39,8 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.http.sse.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +77,7 @@ public class ScheduleController {
     }
 
     @Post(uri = "/schedule", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     public HttpResponse<ScheduleResponse> generateSchedule(
         @Body ScheduleRequest request,
         HttpRequest<?> httpRequest
@@ -89,14 +94,7 @@ public class ScheduleController {
         String interests = request.interests().trim();
         LOG.info("Received schedule generation request: '{}'", sanitizeForLog(interests));
 
-        // 1. Check in-memory query cache
-        var cached = scheduleCache.get(interests);
-        if (cached.isPresent()) {
-            LOG.info("Serving schedule from cache for query: '{}'", sanitizeForLog(interests));
-            return HttpResponse.ok(cached.get());
-        }
-
-        // 2. Check rate limit (per session and IP aggregate)
+        // 1. Check rate limit (per session and IP aggregate)
         String sessionId = ClientIpResolver.resolveSessionId(httpRequest);
         String clientIp = ClientIpResolver.resolveClientIp(httpRequest);
         RateLimitDecision rateDecision = rateLimiter.checkRateLimit(sessionId, clientIp);
@@ -107,6 +105,13 @@ public class ScheduleController {
                 .body(ScheduleResponse.rejected(
                     "Rate limit exceeded. " + rateDecision.reason() + " Please retry in " + rateDecision.retryAfterSeconds() + " seconds."
                 ));
+        }
+
+        // 2. Check in-memory query cache
+        var cached = scheduleCache.get(interests);
+        if (cached.isPresent()) {
+            LOG.info("Serving schedule from cache for query: '{}'", sanitizeForLog(interests));
+            return HttpResponse.ok(cached.get());
         }
 
         // 3. Concurrency limiter & workflow execution
@@ -148,7 +153,21 @@ public class ScheduleController {
         String cleanInterests = interests.trim();
         LOG.info("Received streaming schedule request: '{}'", sanitizeForLog(cleanInterests));
 
-        // 1. Check in-memory query cache
+        // 1. Check rate limit (per session and IP aggregate)
+        String sessionId = ClientIpResolver.resolveSessionId(httpRequest);
+        String clientIp = ClientIpResolver.resolveClientIp(httpRequest);
+        RateLimitDecision rateDecision = rateLimiter.checkRateLimit(sessionId, clientIp);
+        if (!rateDecision.allowed()) {
+            LOG.warn("Rate limit rejected streaming request for IP {} (session {}): {}", clientIp, sessionId, rateDecision.reason());
+            return Flux.just(
+                Event.of(WorkflowProgressEvent.rejected(
+                    "Rate limit exceeded. " + rateDecision.reason() + " Please retry in " + rateDecision.retryAfterSeconds() + " seconds.",
+                    0L
+                ))
+            );
+        }
+
+        // 2. Check in-memory query cache
         var cached = scheduleCache.get(cleanInterests);
         if (cached.isPresent()) {
             LOG.info("Serving streaming schedule from cache for query: '{}'", sanitizeForLog(cleanInterests));
@@ -167,20 +186,6 @@ public class ScheduleController {
                     10L
                 )),
                 Event.of(WorkflowProgressEvent.complete(resp, 15L))
-            );
-        }
-
-        // 2. Check rate limit (per session and IP aggregate)
-        String sessionId = ClientIpResolver.resolveSessionId(httpRequest);
-        String clientIp = ClientIpResolver.resolveClientIp(httpRequest);
-        RateLimitDecision rateDecision = rateLimiter.checkRateLimit(sessionId, clientIp);
-        if (!rateDecision.allowed()) {
-            LOG.warn("Rate limit rejected streaming request for IP {} (session {}): {}", clientIp, sessionId, rateDecision.reason());
-            return Flux.just(
-                Event.of(WorkflowProgressEvent.rejected(
-                    "Rate limit exceeded. " + rateDecision.reason() + " Please retry in " + rateDecision.retryAfterSeconds() + " seconds.",
-                    0L
-                ))
             );
         }
 
@@ -253,6 +258,34 @@ public class ScheduleController {
         return conferenceService.getTalkById(id)
             .map(HttpResponse::ok)
             .orElseGet(HttpResponse::notFound);
+    }
+
+    @Post(uri = "/schedule/alternatives", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
+    @ExecuteOn(TaskExecutors.BLOCKING)
+    public HttpResponse<TalkAlternativesResponse> getAlternatives(
+        @Body TalkAlternativeRequest request,
+        HttpRequest<?> httpRequest
+    ) {
+        if (request == null || request.talkId() <= 0) {
+            return HttpResponse.badRequest(TalkAlternativesResponse.empty(0, "Invalid talk ID."));
+        }
+
+        String clientIp = ClientIpResolver.resolveClientIp(httpRequest);
+        String sessionId = ClientIpResolver.resolveSessionId(httpRequest);
+        RateLimitDecision rateDecision = rateLimiter.checkRateLimit(sessionId, clientIp);
+        if (!rateDecision.allowed()) {
+            LOG.warn("Rate limit rejected alternatives request for IP {} (session {}): {}", clientIp, sessionId, rateDecision.reason());
+            return HttpResponse.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(rateDecision.retryAfterSeconds()))
+                .body(TalkAlternativesResponse.empty(
+                    request.talkId(),
+                    "Rate limit exceeded. " + rateDecision.reason() + " Please retry in " + rateDecision.retryAfterSeconds() + " seconds."
+                ));
+        }
+
+        LOG.info("Finding alternatives for talk ID {} with interests: '{}'", request.talkId(), sanitizeForLog(request.interests()));
+        TalkAlternativesResponse response = workflowService.findAlternatives(request.interests(), request.talkId());
+        return HttpResponse.ok(response);
     }
 
     @Get(uri = "/sample-interests", produces = MediaType.APPLICATION_JSON)

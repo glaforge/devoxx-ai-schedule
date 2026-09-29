@@ -33,11 +33,14 @@ import dvxaisched.agent.DevoxxConferenceTools;
 import dvxaisched.agent.InterestValidatorAgent;
 import dvxaisched.agent.ParallelScheduleBuilderWorkflow;
 import dvxaisched.agent.ScheduleBuilderAgent;
+import dvxaisched.agent.TalkAlternativeAgent;
 import dvxaisched.model.ConferenceTalk;
 import dvxaisched.model.DayPlanRequest;
 import dvxaisched.model.DaySchedule;
 import dvxaisched.model.ScheduleResponse;
 import dvxaisched.model.ScheduledTalk;
+import dvxaisched.model.TalkAlternativesResponse;
+import dvxaisched.model.TalkAlternativesResult;
 import dvxaisched.model.ValidationResult;
 import dvxaisched.model.WorkflowProgressEvent;
 import jakarta.inject.Singleton;
@@ -46,9 +49,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
@@ -65,6 +71,7 @@ public class DevoxxAgentWorkflowService {
     private final DayScheduleBuilderAgent dayScheduleAgent;
     private final ParallelScheduleBuilderWorkflow parallelScheduleWorkflow;
     private final ScheduleBuilderAgent scheduleBuilderAgent;
+    private final TalkAlternativeAgent alternativeAgent;
 
     public DevoxxAgentWorkflowService(
         ChatModel chatModel,
@@ -229,6 +236,11 @@ public class DevoxxAgentWorkflowService {
             .outputKey("schedule")
             .tools(conferenceTools)
             .listener(agentObservabilityListener)
+            .build();
+
+        // Alternative Agent: Curates top 3 alternative talks for a given slot
+        this.alternativeAgent = dev.langchain4j.service.AiServices.builder(TalkAlternativeAgent.class)
+            .chatModel(chatModel)
             .build();
 
         LOG.info("LangChain4j Parallel Mapper Agentic System initialized with virtual thread executor.");
@@ -677,5 +689,138 @@ public class DevoxxAgentWorkflowService {
         String s2 = normalizeTime(start2);
         String e2 = normalizeTime(end2);
         return s1.compareTo(e2) < 0 && s2.compareTo(e1) < 0;
+    }
+
+    /**
+     * Finds and curates the top 3 alternative talks for an attendee's slot.
+     */
+    public TalkAlternativesResponse findAlternatives(String userInterests, long talkId) {
+        Optional<ConferenceTalk> currentOpt = conferenceService.getTalkById(talkId);
+        if (currentOpt.isEmpty()) {
+            return TalkAlternativesResponse.empty(talkId, "Talk #" + talkId + " was not found in the conference catalog.");
+        }
+        ConferenceTalk current = currentOpt.get();
+        String slotTime = current.startTime() + " – " + current.endTime();
+        String day = current.day();
+
+        List<ConferenceTalk> candidateTalks = conferenceService.getSlotAlternatives(talkId);
+        if (candidateTalks.isEmpty()) {
+            return new TalkAlternativesResponse(
+                talkId,
+                current.title(),
+                slotTime,
+                day,
+                List.of(),
+                false,
+                "This session is a plenary event (e.g. Keynote) with no parallel tracks scheduled in other rooms."
+            );
+        }
+
+        String effectiveInterests = (userInterests != null && !userInterests.isBlank())
+            ? userInterests.trim()
+            : "Software engineering, modern technology, and cloud development";
+
+        List<ScheduledTalk> selectedAlternatives = new ArrayList<>();
+        Set<Long> selectedTalkIds = new HashSet<>();
+
+        // 1. Try LLM agent recommendation via Gemini with a 6-second bounded timeout
+        try {
+            String formattedCandidates = conferenceService.formatTalksForPrompt(candidateTalks);
+            java.util.concurrent.CompletableFuture<TalkAlternativesResult> future = java.util.concurrent.CompletableFuture.supplyAsync(() ->
+                alternativeAgent.recommendAlternatives(
+                    effectiveInterests,
+                    current.id(),
+                    current.title(),
+                    current.track() != null ? current.track() : "General",
+                    current.room() != null ? current.room() : "Main",
+                    formattedCandidates
+                ),
+                Executors.newVirtualThreadPerTaskExecutor()
+            );
+            TalkAlternativesResult result = future.get(6, java.util.concurrent.TimeUnit.SECONDS);
+
+            if (result != null && result.selections() != null) {
+                for (TalkAlternativesResult.AlternativeSelection selection : result.selections()) {
+                    if (selectedAlternatives.size() >= 3) break;
+                    if (selection == null || selection.talkId() <= 0) continue;
+                    if (selection.talkId() == current.id() || selectedTalkIds.contains(selection.talkId())) continue;
+
+                    Optional<ConferenceTalk> matchOpt = candidateTalks.stream()
+                        .filter(c -> c.id() == selection.talkId())
+                        .findFirst();
+                    if (matchOpt.isEmpty()) {
+                        matchOpt = conferenceService.getTalkById(selection.talkId());
+                    }
+
+                    if (matchOpt.isPresent()) {
+                        ConferenceTalk t = matchOpt.get();
+                        selectedTalkIds.add(t.id());
+                        String reason = (selection.reason() != null && !selection.reason().isBlank())
+                            ? selection.reason()
+                            : "Recommended alternative in the " + (t.track() != null ? t.track() : "technical") + " track.";
+                        selectedAlternatives.add(new ScheduledTalk(
+                            t.id(),
+                            t.day(),
+                            t.date(),
+                            t.startTime(),
+                            t.endTime(),
+                            t.room(),
+                            t.title(),
+                            t.speakersSummary(),
+                            t.track(),
+                            t.sessionType(),
+                            reason,
+                            t.talkAbstract(),
+                            t.url() != null && !t.url().isBlank() ? t.url() : ConferenceTalk.buildDevoxxTalkUrl("dvbe26", t.id(), t.title())
+                        ));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("AlternativeAgent invocation failed for talk {}: {}. Falling back to deterministic ranking.", talkId, e.getMessage());
+        }
+
+        // 2. Backfill with deterministic candidate ranking if LLM returned fewer than target
+        int targetCount = Math.min(3, candidateTalks.size());
+        if (selectedAlternatives.size() < targetCount) {
+            List<ConferenceTalk> sortedByRelevance = new ArrayList<>(candidateTalks);
+            sortedByRelevance.sort((a, b) -> Integer.compare(
+                conferenceService.scoreTalk(b, effectiveInterests),
+                conferenceService.scoreTalk(a, effectiveInterests)
+            ));
+
+            for (ConferenceTalk t : sortedByRelevance) {
+                if (selectedAlternatives.size() >= targetCount) break;
+                if (selectedTalkIds.contains(t.id())) continue;
+
+                selectedTalkIds.add(t.id());
+                String reason = "Alternative in " + (t.track() != null ? t.track() : "the conference") + " with high community interest.";
+                selectedAlternatives.add(new ScheduledTalk(
+                    t.id(),
+                    t.day(),
+                    t.date(),
+                    t.startTime(),
+                    t.endTime(),
+                    t.room(),
+                    t.title(),
+                    t.speakersSummary(),
+                    t.track(),
+                    t.sessionType(),
+                    reason,
+                    t.talkAbstract(),
+                    t.url() != null && !t.url().isBlank() ? t.url() : ConferenceTalk.buildDevoxxTalkUrl("dvbe26", t.id(), t.title())
+                ));
+            }
+        }
+
+        return new TalkAlternativesResponse(
+            talkId,
+            current.title(),
+            slotTime,
+            day,
+            selectedAlternatives,
+            !selectedAlternatives.isEmpty(),
+            null
+        );
     }
 }

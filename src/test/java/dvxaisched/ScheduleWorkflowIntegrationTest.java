@@ -213,9 +213,11 @@ class ScheduleWorkflowIntegrationTest {
         String ip = "192.0.2.100";
 
         rateLimiterService.reset();
+        String cachedTopic = "Rate Limit Pre-cached Topic";
+        scheduleCache.put(cachedTopic, new ScheduleResponse(true, "Cached for rate limit test", "Theme", "Overview", List.of()));
 
         for (int i = 0; i < 5; i++) {
-            var req = HttpRequest.POST("/api/schedule", new ScheduleRequest("Topic " + i))
+            var req = HttpRequest.POST("/api/schedule", new ScheduleRequest(cachedTopic))
                 .header("X-Session-ID", testSession)
                 .header("X-Forwarded-For", ip);
             try {
@@ -225,7 +227,7 @@ class ScheduleWorkflowIntegrationTest {
         }
 
         try {
-            var req = HttpRequest.POST("/api/schedule", new ScheduleRequest("Topic 6"))
+            var req = HttpRequest.POST("/api/schedule", new ScheduleRequest(cachedTopic))
                 .header("X-Session-ID", testSession)
                 .header("X-Forwarded-For", ip);
             client.toBlocking().exchange(req, ScheduleResponse.class);

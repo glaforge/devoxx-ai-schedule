@@ -64,4 +64,32 @@ class DevoxxConferenceServiceTest {
             assertEquals("monday", t.day().toLowerCase());
         }
     }
+
+    @Test
+    void testGetSlotAlternatives() {
+        // Find a regular conference talk on Wednesday
+        List<ConferenceTalk> wednesdayTalks = conferenceService.getTalksByDay("wednesday");
+        ConferenceTalk targetTalk = wednesdayTalks.stream()
+            .filter(t -> "14:00".equals(t.startTime()) && "14:50".equals(t.endTime()))
+            .findFirst()
+            .orElseThrow();
+
+        List<ConferenceTalk> alternatives = conferenceService.getSlotAlternatives(targetTalk.id());
+        assertNotNull(alternatives);
+        assertFalse(alternatives.isEmpty(), "Expected alternatives for Wednesday 14:00 slot");
+        assertTrue(alternatives.size() >= 5, "Expected at least 5 parallel rooms for 14:00 slot");
+
+        // Verify no alternative is the same talk, and all match the slot
+        for (ConferenceTalk alt : alternatives) {
+            assertNotEquals(targetTalk.id(), alt.id());
+            assertEquals("wednesday", alt.day().toLowerCase());
+            assertEquals(targetTalk.startTime(), alt.startTime());
+            assertEquals(targetTalk.endTime(), alt.endTime());
+        }
+
+        // Test non-existent talk returns empty list
+        List<ConferenceTalk> notFound = conferenceService.getSlotAlternatives(9999999L);
+        assertNotNull(notFound);
+        assertTrue(notFound.isEmpty());
+    }
 }

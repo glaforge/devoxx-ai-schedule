@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package dvxaisched;
+package dvxaisched.model;
 
-import io.micronaut.runtime.Micronaut;
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.serde.annotation.Serdeable;
 
-public class Application {
-
-    public static void main(String[] args) {
-        System.setProperty("java.net.preferIPv6Addresses", "true");
-        Micronaut.run(Application.class, args);
-    }
-}
+@Serdeable
+public record TalkAlternativeRequest(
+    @Nullable String interests,
+    long talkId
+) {}

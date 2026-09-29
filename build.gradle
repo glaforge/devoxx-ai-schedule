@@ -97,7 +97,12 @@ tasks.withType(AbstractTestTask).configureEach {
 tasks.withType(Test).configureEach {
     def apiKey = System.getenv("GEMINI_API_KEY") ?: ""
     environment "GEMINI_API_KEY", apiKey
+    systemProperty "java.net.preferIPv6Addresses", "true"
     finalizedBy(tasks.named("jacocoTestReport"))
+}
+
+tasks.withType(JavaExec).configureEach {
+    systemProperty "java.net.preferIPv6Addresses", "true"
 }
 
 tasks.named("jacocoTestReport") {
